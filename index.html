@@ -147,7 +147,6 @@
 </head>
 <body>
 
-    <!-- 1. CRUSCOTTO FISSO IN ALTO -->
     <div class="top-dashboard">
         <div class="mini-card money-card" id="card-money">
             <i class="fa-solid fa-wallet"></i>
@@ -176,10 +175,8 @@
         </div>
     </div>
 
-    <!-- 2. CONTENITORE CENTRALE SCHEDE -->
     <div class="main-content">
         
-        <!-- SCHEDA 1: IL BANCO -->
         <div id="tab-shop" class="tab-panel active">
             <h2><i class="fa-solid fa-shop"></i> Ordini & Negozio</h2>
             
@@ -214,7 +211,6 @@
             <button class="wood-btn" style="background: #c62828; margin-top: 25px; font-size: 0.8em;" onclick="resetGameData()">Reset Completo Gioco</button>
         </div>
 
-        <!-- SCHEDA 2: LA PRODUZIONE -->
         <div id="tab-craft" class="tab-panel">
             <h2><i class="fa-solid fa-gears"></i> Linee di Produzione</h2>
             
@@ -227,7 +223,6 @@
             <div id="recipes-list-container"></div>
         </div>
 
-        <!-- SCHEDA 3: LA LOGISTICA -->
         <div id="tab-logistics" class="tab-panel">
             <h2><i class="fa-solid fa-truck"></i> Magazzino & Ordini</h2>
             
@@ -263,7 +258,6 @@
 
     </div>
 
-    <!-- 3. BARRA DI NAVIGAZIONE IN BASSO -->
     <div class="bottom-nav">
         <button class="nav-item active" id="nav-shop" onclick="switchTab('shop')">
             <i class="fa-solid fa-shop"></i>
@@ -297,7 +291,7 @@
         incomingDeliveries: [], craftQueue: []
     };
 
-    // --- MECCANICA SWITCH TAB RISOLTA ---
+    // --- NAVIGAZIONE A SCHEDE ---
     function switchTab(tabId) {
         document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
         document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
@@ -305,10 +299,8 @@
         document.getElementById(`tab-${tabId}`).classList.add('active');
         document.getElementById(`nav-${tabId}`).classList.add('active');
         
-        // RISOLUZIONE BUG: Forza il ridisegno delle ricette quando apri la scheda produzione
-        if(tabId === 'craft') {
-            renderRecipesMenu();
-        }
+        if(tabId === 'craft') { renderRecipesMenu(); }
+        updateUI();
     }
 
     // --- MECCANICHE DI SALVATAGGIO ---
@@ -383,10 +375,15 @@
         }
     }
 
+    // --- RISOLUZIONE BUG GRAFICO: Forza l'aggiornamento UI immediato al click dell'upgrade ---
     function upgradeMachine() {
         if (state.money >= state.machineUpgradeCost) {
-            state.money -= state.machineUpgradeCost; state.machineLevel += 1; state.machineUpgradeCost *= 1.8;
-            createFloatingText(`Caldaia Migliorata!`, '#4caf50'); saveGameData(); updateUI();
+            state.money -= state.machineUpgradeCost; 
+            state.machineLevel += 1; 
+            state.machineUpgradeCost *= 1.8;
+            createFloatingText(`Caldaia Migliorata!`, '#4caf50'); 
+            saveGameData(); 
+            updateUI(); // Forza il rinfresco immediato di testi e pulsanti
         }
     }
 
@@ -430,11 +427,12 @@
         saveGameData(); updateUI();
     }
 
+    // Risoluzione sblocco con rinfresco
     function unlockRecipe(key) {
         let recipe = recipes[key];
         if (state.money >= recipe.licenseCost && state.baristas >= 1) {
             state.money -= recipe.licenseCost; recipe.unlocked = true;
-            renderRecipesMenu(); generateCustomerRequest(); saveGameData();
+            renderRecipesMenu(); generateCustomerRequest(); saveGameData(); updateUI();
         }
     }
 
@@ -452,25 +450,30 @@
     }
 
     function updateUI() {
+        // Cruscotto fisso alto
         document.getElementById('lbl-money').innerText = state.money.toFixed(2) + "€";
         document.getElementById('lbl-capsules').innerText = state.capsules;
         document.getElementById('lbl-milk').innerText = state.milk;
         document.getElementById('showcase-espresso').innerText = state.inventory.espresso;
         document.getElementById('showcase-cappuccino').innerText = state.inventory.cappuccino;
         
+        // Sezione Negozio / Officina
         document.getElementById('count-baristas').innerText = state.baristas;
         document.getElementById('cost-barista').innerText = state.baristaCost.toFixed(2);
+        
         let speedBonusPercent = (state.machineLevel - 1) * 10;
         document.getElementById('lbl-machine-level').innerText = state.machineLevel;
         document.getElementById('lbl-machine-speed-desc').innerText = `Velocità manuale: +${speedBonusPercent}%`;
         document.getElementById('cost-machine-upgrade').innerText = state.machineUpgradeCost.toFixed(2);
         document.getElementById('lbl-machine-level-status').innerText = `Liv. ${state.machineLevel} (+${speedBonusPercent}% vel.)`;
 
+        // Sezione Logistica
         document.getElementById('count-suppliers-capsules').innerText = state.suppliersCapsules;
         document.getElementById('cost-supplier-capsules').innerText = state.supplierCapsulesCost.toFixed(2);
         document.getElementById('count-suppliers-milk').innerText = state.suppliersMilk;
         document.getElementById('cost-supplier-milk').innerText = state.supplierMilkCost.toFixed(2);
 
+        // Abilitazione/Disabilitazione pulsanti generali
         document.getElementById('btn-buy-capsules').disabled = state.money < 5.00;
         document.getElementById('btn-buy-milk').disabled = state.money < 4.00;
         document.getElementById('btn-hire-barista').disabled = state.money < state.baristaCost;
@@ -498,6 +501,7 @@
             }
         });
 
+        // Coda macchine
         const craftContainer = document.getElementById('craft-queue-container');
         let espressoJobs = state.craftQueue.filter(j => j.key === 'espresso');
         let cappuccinoJobs = state.craftQueue.filter(j => j.key === 'cappuccino');
@@ -517,6 +521,7 @@
             }
         }
 
+        // Coda Furgoni Logistica
         const deliveryContainer = document.getElementById('delivery-queue-container');
         let capsDeliveries = state.incomingDeliveries.filter(d => d.type === 'capsules');
         let milkDeliveries = state.incomingDeliveries.filter(d => d.type === 'milk');
@@ -537,22 +542,24 @@
         }
     }
 
-    // --- LOGICA TIMER CENTRALE ---
+    // --- TIMERS ENGINE (100ms) ---
     let loopCounter = 0;
     setInterval(function() {
         loopCounter++;
         if(loopCounter >= 50) { loopCounter = 0; saveGameData(); }
 
+        // Gestione ordini in cottura
         if (state.craftQueue.length > 0) {
             let activeOrder = state.craftQueue[0]; activeOrder.progress += 0.1;
             if (activeOrder.progress >= activeOrder.totalTime) {
                 state.inventory[activeOrder.key] += 1; createFloatingText(`+1 Pronto!`, '#4caf50');
-                state.craftQueue.shift(); saveGameData(); updateUI();
-            } else { updateUI(); }
+                state.craftQueue.shift(); saveGameData();
+            }
         }
 
+        // Gestione pazienza cliente al banco
         if (state.isCustomerWaiting) {
-            state.customerTimer -= 0.1; document.getElementById('request-timer-bar').style.width = `${(state.customerTimer / 10.0) * 100}%`;
+            state.customerTimer -= 0.1;
             if (state.customerTimer <= 0) {
                 state.isCustomerWaiting = false;
                 if (state.baristas > 0 && state.inventory[state.currentRequestKey] > 0) {
@@ -562,17 +569,24 @@
             }
         }
 
+        // Gestione logistica furgoni merci
         if (state.incomingDeliveries.length > 0) {
             let rem = []; state.incomingDeliveries.forEach((del, idx) => {
-                del.progress += 0.1; if(del.progress >= del.totalTime) {
-                    if(del.type === 'capsules') state.capsules += 10; else state.milk += 10;
+                del.progress += 0.1; 
+                if(del.progress >= del.totalTime) {
+                    if(del.type === 'capsules') { state.capsules += 10; } else { state.milk += 10; }
+                    createFloatingText(`+10 Consegnati!`, '#2196f3');
                     rem.push(idx);
                 }
             });
             for (let i = rem.length - 1; i >= 0; i--) { state.incomingDeliveries.splice(rem[i], 1); }
-            saveGameData(); updateUI();
+            saveGameData();
         }
 
+        // Rinfresca l'interfaccia ad ogni tick di secondo
+        updateUI();
+
+        // Fornitori fissi
         if(state.suppliersCapsules > 0 && loopCounter % 120 === 0) {
             let cost = state.suppliersCapsules * 4.20; if(state.money >= cost) { state.money -= cost; for(let s=0; s<state.suppliersCapsules; s++) state.incomingDeliveries.push({ id: Math.random(), type: 'capsules', totalTime: 4.0, progress: 0 }); }
         }
