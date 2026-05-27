@@ -1,4 +1,4 @@
-const CACHE_NAME = 'coffee-tycoon-v7';
+const CACHE_NAME = 'coffee-tycoon-v8';
 const ASSETS = [
   'index.html',
   'manifest.json',
