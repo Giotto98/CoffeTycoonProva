@@ -1,0 +1,17 @@
+{
+  "name": "Coffee Tycoon Pro",
+  "short_name": "CoffeeTycoon",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#1a0f0a",
+  "theme_color": "#2b1a11",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/924/924514.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

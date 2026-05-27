@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <!-- Ottimizzazione Mobile: Blocca lo zoom accidentale sui doppi tocchi rapidi -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Coffee Tycoon PRO</title>
+    
+    <!-- Collegamento al Manifest della PWA -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2b1a11">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <style>
+        * { box-sizing: border-box; user-select: none; -webkit-user-select: none; touch-action: manipulation; }
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background-color: #1a0f0a;
+            background-image: radial-gradient(circle, rgba(45,24,16,0.95) 0%, rgba(21,10,6,0.98) 100%);
+            color: #3e2723; margin: 0; padding: 10px;
+            min-height: 100vh; display: flex; align-items: center; justify-content: center;
+        }
+        .game-wrapper {
+            width: 100%; max-width: 1150px; background: #2b1a11;
+            border: 4px solid #5d4037; border-radius: 24px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.8); padding: 15px;
+        }
+        .header-wood {
+            background: linear-gradient(to bottom, #8d6e63, #4e342e);
+            border: 3px solid #d7ccc8; border-radius: 20px; padding: 10px; text-align: center;
+            position: relative;
+        }
+        .header-wood h1 { font-family: 'Fredoka', sans-serif; color: #fff9c4; margin: 0; font-size: 2em; text-shadow: 2px 3px 0px #3e2723; }
+        
+        /* Bottone Reset Dati */
+        .btn-reset-data {
+            position: absolute; right: 15px; top: 15px; background: #c62828; color: white;
+            border: none; padding: 5px 10px; border-radius: 6px; font-size: 0.75em; font-weight: bold;
+            cursor: pointer; font-family: 'Fredoka', sans-serif;
+        }
+
+        /* --- RICHIESTA CLIENTE --- */
+        .customer-request-box {
+            background: linear-gradient(135deg, #fffde7, #fff9c4);
+            border: 3px solid #fbc02d; border-radius: 16px; padding: 12px; margin: 15px 0;
+            display: grid; grid-template-columns: 1.4fr 1fr 1fr; align-items: center; gap: 10px;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.25);
+        }
+        .request-bubble { background: white; padding: 6px 10px; border-radius: 12px; border: 2px solid #fbc02d; font-weight: bold; font-size: 0.9em; }
+        .progress-container { width: 100%; background: #e0e0e0; height: 12px; border-radius: 6px; overflow: hidden; position: relative; }
+        .progress-bar { width: 100%; height: 100%; background: #fbc02d; width: 0%; transition: width 0.1s linear; }
+
+        /* --- STATS BAR --- */
+        .stats-bar { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 15px; }
+        @media (min-width: 600px) { .stats-bar { grid-template-columns: repeat(4, 1fr); } }
+        .stat-card {
+            background: linear-gradient(135deg, #efebe9, #d7ccc8);
+            border: 3px solid #5d4037; border-radius: 16px; padding: 8px;
+            display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+        .stat-details { display: flex; flex-direction: column; }
+        .stat-label { font-size: 0.75em; text-transform: uppercase; font-weight: 700; color: #6d4c41; }
+        .stat-value { font-family: 'Fredoka', sans-serif; font-size: 1.1em; color: #3e2723; font-weight: 700; }
+
+        /* --- GRIGLIA GIOCO --- */
+        .game-grid { display: grid; grid-template-columns: 1fr; gap: 15px; }
+        @media (min-width: 800px) { .game-grid { grid-template-columns: 1.2fr 1fr; } }
+        .panel { background: #fcf8f2; border: 4px solid #5d4037; border-radius: 20px; padding: 15px; box-shadow: 0 8px 16px rgba(0,0,0,0.5); }
+        h2 { font-family: 'Fredoka', sans-serif; color: #4e342e; text-align: center; margin-top: 0; border-bottom: 2px dashed #d7ccc8; padding-bottom: 5px; font-size: 1.2em;}
+
+        .wood-btn {
+            width: 100%; background: linear-gradient(to bottom, #8d6e63, #5d4037);
+            border: 3px solid #4e342e; border-bottom-width: 4px; border-radius: 12px;
+            color: #fff9c4; font-family: 'Fredoka', sans-serif; font-size: 0.95em; padding: 10px;
+            margin-bottom: 8px; cursor: pointer; text-shadow: 1px 1px 0px rgba(0,0,0,0.5);
+            display: flex; align-items: center; justify-content: center; gap: 6px;
+        }
+        .wood-btn:active:not(:disabled) { transform: translateY(2px); border-bottom-width: 2px; }
+        .wood-btn:disabled { background: linear-gradient(to bottom, #cfd8dc, #b0bec5); border-color: #90a4ae; color: #78909c; text-shadow: none; cursor: not-allowed; border-bottom-width: 2px; }
+
+        .delivery-queue-box { background: #fff; border: 2px dashed #8d6e63; border-radius: 12px; padding: 8px; margin-top: 8px; }
+        .delivery-item { display: flex; align-items: center; justify-content: space-between; font-size: 0.8em; background: #f5f5f5; padding: 6px 10px; border-radius: 8px; margin-bottom: 4px; }
+        .mini-progress { width: 80px; background: #e0e0e0; height: 8px; border-radius: 4px; overflow: hidden; }
+        .mini-progress-bar { height: 100%; background: #2196f3; width: 0%; }
+        .craft-progress-bar { background: #4caf50 !important; }
+
+        .card-item { background: white; border: 2px solid #e0d4c3; border-radius: 12px; padding: 8px; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; position: relative; }
+        .item-info h3 { margin: 0; font-family: 'Fredoka', sans-serif; font-size: 1em; color: #3e2723; display: flex; align-items: center; gap: 6px; }
+        .item-info p { margin: 2px 0 0 0; font-size: 0.75em; color: #795548; font-weight: bold; }
+        .btn-action { font-size: 0.8em; padding: 6px 10px; border-radius: 8px; width: auto; margin: 0; }
+
+        /* TOOLTIP ADATTATO MOBILE */
+        .unlock-wrapper { position: relative; display: inline-block; }
+        .unlock-tooltip {
+            visibility: hidden; width: 200px; background-color: #3e2723; color: #fff9c4;
+            text-align: center; border-radius: 8px; padding: 8px; position: absolute;
+            z-index: 10; bottom: 125%; left: 50%; transform: translateX(-50%);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3); font-size: 0.75em; font-weight: bold;
+            line-height: 1.3em; border: 2px solid #ff9800; opacity: 0; transition: opacity 0.2s;
+            pointer-events: none;
+        }
+        .unlock-wrapper:hover .unlock-tooltip, .unlock-wrapper:active .unlock-tooltip { visibility: visible; opacity: 1; }
+
+        /* VETRINA INVENTARIO */
+        .showcase-container {
+            background: linear-gradient(to bottom, #eae0d5, #c6ac95);
+            border: 3px solid #5d4037; border-radius: 16px; padding: 10px; margin-bottom: 15px;
+            display: flex; justify-content: space-around; align-items: center; box-shadow: inset 0 2px 6px rgba(0,0,0,0.2);
+        }
+        .showcase-slot {
+            background: white; border: 2px solid #5d4037; border-radius: 12px; padding: 6px 12px;
+            text-align: center; min-width: 100px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .showcase-count { font-family: 'Fredoka', sans-serif; font-size: 1.3em; color: #e65100; font-weight: bold; }
+        .showcase-label { font-size: 0.7em; font-weight: bold; color: #5d4037; text-transform: uppercase; margin-top: 2px; }
+
+        .alert-bar { grid-column: 1 / -1; background: linear-gradient(to right, #ffe0b2, #ffcc80); border: 2px solid #f57c00; border-radius: 12px; padding: 8px; text-align: center; font-weight: bold; color: #e65100; display: none; font-family: 'Fredoka', sans-serif; margin-top: 15px; }
+        .floating-text { position: absolute; font-family: 'Fredoka', sans-serif; font-weight: 700; font-size: 1.1em; pointer-events: none; animation: floatUp 0.8s ease-out forwards; z-index: 100; }
+        @keyframes floatUp { 0% { opacity: 0; transform: translateY(0); } 20% { opacity: 1; } 100% { opacity: 0; transform: translateY(-30px); } }
+    </style>
+</head>
+<body>
+
+<div class="game-wrapper">
+    <div class="header-wood">
+        <h1>☕ COFFEE TYCOON </h1>
+        <button class="btn-reset-data" onclick="resetGameData()">Reset</button>
+    </div>
+    
+    <!-- BOX RICHIESTA CLIENTE -->
+    <div class="customer-request-box">
+        <div>
+            <div style="font-size: 0.75em; font-weight: bold; color: #f57f17; text-transform: uppercase;">Ordinazione:</div>
+            <div class="request-bubble" id="lbl-request-text">In attesa...</div>
+        </div>
+        <div>
+            <div style="font-size: 0.75em; font-weight: bold; text-align: center; margin-bottom: 5px;">Pazienza</div>
+            <div class="progress-container">
+                <div class="progress-bar" id="request-timer-bar"></div>
+            </div>
+        </div>
+        <button id="btn-serve-request" class="wood-btn" onclick="serveCustomerFromInventory(event)">
+            Consegna! (+20%)
+        </button>
+    </div>
+
+    <!-- VETRINA INVENTARIO -->
+    <div class="showcase-container">
+        <div class="showcase-slot">
+            <div class="showcase-count" id="showcase-espresso">0</div>
+            <div class="showcase-label">☕ Caffè</div>
+        </div>
+        <div class="showcase-slot">
+            <div class="showcase-count" id="showcase-cappuccino">0</div>
+            <div class="showcase-label">🥛 Cappuccini</div>
+        </div>
+    </div>
+    
+    <!-- BANCO RISORSE -->
+    <div class="stats-bar">
+        <div class="stat-card" id="card-money">
+            <div class="stat-details"><span class="stat-label">Cassa</span><span class="stat-value"><span id="lbl-money">15.00</span> €</span></div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-details"><span class="stat-label">Capsule</span><span class="stat-value" id="lbl-capsules">10</span></div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-details"><span class="stat-label">Latte</span><span class="stat-value" id="lbl-milk">5</span></div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-details"><span class="stat-label">Macchina</span><span class="stat-value" id="lbl-machine-level-status">Liv. 1</span></div>
+        </div>
+    </div>
+
+    <!-- GRIGLIA PRINCIPALE -->
+    <div class="game-grid">
+        <div class="panel">
+            <h2>Produzione e Acquisti</h2>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                <button id="btn-buy-capsules" class="wood-btn" onclick="orderIngredients('capsules')">10 Caps (-5€)</button>
+                <button id="btn-buy-milk" class="wood-btn" onclick="orderIngredients('milk')">10 Latte (-4€)</button>
+            </div>
+
+            <div class="delivery-queue-box" style="border-color: #4caf50; background-color: #fbfdfb;">
+                <div style="font-size: 0.75em; font-weight: bold; color:#1b5e20; margin-bottom: 4px;"><i class="fa-solid fa-mug-hot"></i> Macchinari in Cottura:</div>
+                <div id="craft-queue-container"></div>
+            </div>
+
+            <div class="delivery-queue-box">
+                <div style="font-size: 0.75em; font-weight: bold; color:#5d4037; margin-bottom: 4px;"><i class="fa-solid fa-truck"></i> Furgoni Merci:</div>
+                <div id="delivery-queue-container"></div>
+            </div>
+            <div style="margin: 10px 0; border-bottom: 2px dashed #e0d4c3;"></div>
+            <div id="recipes-list-container"></div>
+        </div>
+
+        <div class="panel">
+            <h2>Officina & Personale</h2>
+            <!-- MACCHINA -->
+            <div class="card-item" style="background: #fff8e1; border-color: #ffe082;">
+                <div class="item-info">
+                    <h3><i class="fa-solid fa-gauge-high"></i> Caldaia</h3>
+                    <p>Livello: <span id="lbl-machine-level">1</span></p>
+                    <p style="font-size:0.7em; color:#8d6e63; margin:0;" id="lbl-machine-speed-desc">+0% velocità</p>
+                </div>
+                <button id="btn-upgrade-machine" class="wood-btn btn-action" style="background: linear-gradient(#4caf50, #2e7d32);" onclick="upgradeMachine()">Migliora (<span id="cost-machine-upgrade">10.00</span>€)</button>
+            </div>
+            <!-- BARISTA -->
+            <div class="card-item">
+                <div class="item-info">
+                    <h3><i class="fa-solid fa-user-tie"></i> Barista Aut.</h3>
+                    <p>Assunti: <span id="count-baristas">0</span></p>
+                </div>
+                <button id="btn-hire-barista" class="wood-btn btn-action" onclick="hireBarista()">Assumi (<span id="cost-barista">15.00</span>€)</button>
+            </div>
+            <!-- FORNITORE CAPSULE -->
+            <div class="card-item">
+                <div class="item-info">
+                    <h3><i class="fa-solid fa-truck-moving" style="color:#1565c0;"></i> Forn. Capsule</h3>
+                    <p>Contratti: <span id="count-suppliers-capsules">0</span></p>
+                </div>
+                <button id="btn-hire-supplier-capsules" class="wood-btn btn-action" style="background: linear-gradient(#42a5f5, #1565c0);" onclick="hireSupplier('capsules')">Firma (<span id="cost-supplier-capsules">30.00</span>€)</button>
+            </div>
+            <!-- FORNITORE LATTE -->
+            <div class="card-item">
+                <div class="item-info">
+                    <h3><i class="fa-solid fa-cow" style="color:#00796b;"></i> Forn. Latte</h3>
+                    <p>Contratti: <span id="count-suppliers-milk">0</span></p>
+                </div>
+                <button id="btn-hire-supplier-milk" class="wood-btn btn-action" style="background: linear-gradient(#26a69a, #00796b);" onclick="hireSupplier('milk')">Firma (<span id="cost-supplier-milk">30.00</span>€)</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- STRUTTURA REGISTRO DATI DI BASE ---
+    const recipes = {
+        espresso: { name: "Caffè Espresso", price: 2.00, capsules: 1, milk: 0, craftTime: 3.0, unlocked: true, licenseCost: 0 },
+        cappuccino: { name: "Cappuccino Italiano", price: 4.50, capsules: 1, milk: 1, craftTime: 5.0, unlocked: false, licenseCost: 20.00 }
+    };
+
+    let state = {
+        money: 15.00, capsules: 10, milk: 5,
+        baristas: 0, baristaCost: 15.00,
+        suppliersCapsules: 0, supplierCapsulesCost: 30.00,
+        suppliersMilk: 0, supplierMilkCost: 30.00,
+        machineLevel: 1, machineUpgradeCost: 10.00,
+        inventory: { espresso: 0, cappuccino: 0 },
+        currentRequestKey: 'espresso', customerTimer: 10.0, isCustomerWaiting: true,
+        incomingDeliveries: [], craftQueue: []
+    };
+
+    // --- MECCANICHE DI SALVATAGGIO AUTOMATICO (LOCALSTORAGE) ---
+    function saveGameData() {
+        // Salviamo lo stato attuale e le ricette sbloccate convertendoli in testo JSON
+        localStorage.setItem('coffee_tycoon_state', JSON.stringify(state));
+        localStorage.setItem('coffee_tycoon_recipes', JSON.stringify(recipes));
+    }
+
+    function loadGameData() {
+        let savedState = localStorage.getItem('coffee_tycoon_state');
+        let savedRecipes = localStorage.getItem('coffee_tycoon_recipes');
+
+        if (savedState && savedRecipes) {
+            state = JSON.parse(savedState);
+            // Svuota le vecchie code temporanee all'avvio per evitare furgoni fantasma bloccati
+            state.incomingDeliveries = [];
+            state.craftQueue = [];
+            state.isCustomerWaiting = false; // Forza il reset del cliente
+
+            let parsedRecipes = JSON.parse(savedRecipes);
+            Object.keys(recipes).forEach(k => {
+                recipes[k].unlocked = parsedRecipes[k].unlocked;
+            });
+            
+            // Riattiva i thread dei baristi salvati
+            for(let i=0; i<state.baristas; i++) {
+                addBaristaAutomation(true);
+            }
+        }
+    }
+
+    function resetGameData() {
+        if(confirm("Vuoi davvero azzerare l'impero e ricominciare da capo?")) {
+            localStorage.clear();
+            window.location.reload();
+        }
+    }
+
+    // --- LOGICA DI GIOCO STANDARD ---
+    function createFloatingText(text, color, x, y) {
+        if (!x || !y) { const rect = document.getElementById('card-money').getBoundingClientRect(); x = rect.left + rect.width / 2; y = rect.top; }
+        const el = document.createElement('div'); el.className = 'floating-text'; el.innerText = text; el.style.left = `${x}px`; el.style.top = `${y}px`; if (color) el.style.color = color;
+        document.body.appendChild(el); setTimeout(() => el.remove(), 800);
+    }
+
+    function generateCustomerRequest() {
+        let unlocked = Object.keys(recipes).filter(k => recipes[k].unlocked);
+        state.currentRequestKey = unlocked[Math.floor(Math.random() * unlocked.length)];
+        state.isCustomerWaiting = false; state.customerTimer = 10.0;
+        let recipe = recipes[state.currentRequestKey];
+        document.getElementById('lbl-request-text').innerText = `Vorrei un ${recipe.name}!`;
+        document.getElementById('request-timer-bar').style.width = '100%';
+        state.isCustomerWaiting = true;
+        updateUI();
+    }
+
+    function getModifiedCraftTime(baseTime) {
+        let efficiencyMultiplier = 1 + ((state.machineLevel - 1) * 0.10);
+        return Math.max(0.1, baseTime / efficiencyMultiplier);
+    }
+
+    function queueManualProduction(selectedKey) {
+        let recipe = recipes[selectedKey];
+        if (state.capsules >= recipe.capsules && state.milk >= recipe.milk) {
+            state.capsules -= recipe.capsules; state.milk -= recipe.milk;
+            state.craftQueue.push({ id: Date.now() + Math.random(), key: selectedKey, name: recipe.name, progress: 0, totalTime: getModifiedCraftTime(recipe.craftTime) });
+            saveGameData(); // Salva
+            updateUI();
+        }
+    }
+
+    function serveCustomerFromInventory(event) {
+        if (!state.isCustomerWaiting) return;
+        let requiredKey = state.currentRequestKey;
+        if (state.inventory[requiredKey] > 0) {
+            state.inventory[requiredKey] -= 1;
+            let cashGained = recipes[requiredKey].price * 1.20;
+            state.money += cashGained;
+            createFloatingText(`+${cashGained.toFixed(2)}€!`, '#2e7d32', event.clientX, event.clientY);
+            state.isCustomerWaiting = false;
+            generateCustomerRequest();
+            saveGameData(); // Salva
+        }
+    }
+
+    function upgradeMachine() {
+        if (state.money >= state.machineUpgradeCost) {
+            state.money -= state.machineUpgradeCost; state.machineLevel += 1; state.machineUpgradeCost *= 1.8;
+            createFloatingText(`Potenziata!`, '#4caf50');
+            saveGameData();
+            updateUI();
+        }
+    }
+
+    function orderIngredients(type) {
+        let cost = type === 'capsules' ? 5.00 : 4.00;
+        if (state.money >= cost) {
+            state.money -= cost;
+            state.incomingDeliveries.push({ id: Date.now() + Math.random(), type: type, name: type === 'capsules' ? "Capsule" : "Latte", progress: 0, totalTime: 4.0 });
+            updateUI();
+        }
+    }
+
+    function addBaristaAutomation(isInitLoad = false) {
+        if(!isInitLoad && state.money >= state.baristaCost) {
+            state.money -= state.baristaCost; state.baristas += 1; state.baristaCost *= 1.5;
+            saveGameData();
+        } else if (!isInitLoad) { return; }
+
+        function baristaCycle() {
+            let pool = ["espresso"]; if(recipes.cappuccino.unlocked) pool.push("cappuccino");
+            let chosenKey = pool[Math.floor(Math.random() * pool.length)];
+            let recipe = recipes[chosenKey];
+            let workTime = chosenKey === 'espresso' ? 5000 : 10000;
+            setTimeout(() => {
+                if (state.capsules >= recipe.capsules && state.milk >= recipe.milk) {
+                    state.capsules -= recipe.capsules; state.milk -= recipe.milk;
+                    state.inventory[chosenKey] += 1;
+                    createFloatingText(`+1 ${recipe.name}`, '#795548');
+                }
+                baristaCycle();
+            }, workTime);
+        }
+        baristaCycle();
+        updateUI();
+    }
+    
+    function hireBarista() { addBaristaAutomation(false); }
+
+    function hireSupplier(type) {
+        if (type === 'capsules' && state.money >= state.supplierCapsulesCost) {
+            state.money -= state.supplierCapsulesCost; state.suppliersCapsules += 1; state.supplierCapsulesCost *= 1.6;
+        } else if (type === 'milk' && state.money >= state.supplierMilkCost) {
+            state.money -= state.supplierMilkCost; state.suppliersMilk += 1; state.supplierMilkCost *= 1.6;
+        }
+        saveGameData();
+        updateUI();
+    }
+
+    function unlockRecipe(key) {
+        let recipe = recipes[key];
+        if (state.money >= recipe.licenseCost && state.baristas >= 1) {
+            state.money -= recipe.licenseCost; recipe.unlocked = true;
+            renderRecipesMenu(); generateCustomerRequest(); saveGameData();
+        }
+    }
+
+    function renderRecipesMenu() {
+        const container = document.getElementById('recipes-list-container'); container.innerHTML = '';
+        Object.keys(recipes).forEach(key => {
+            let r = recipes[key]; let card = document.createElement('div'); card.className = 'card-item';
+            if(r.unlocked) {
+                card.innerHTML = `<div class="item-info"><h3>☕ ${r.name}</h3><p>${r.price.toFixed(2)}€ | Usa: ${r.capsules} Cap. ${r.milk > 0 ? `+ ${r.milk} L.` : ''}</p></div><button class="wood-btn btn-action" id="btn-craft-${key}" onclick="queueManualProduction('${key}')">Prepara</button>`;
+            } else {
+                card.innerHTML = `<div class="item-info" style="opacity:0.5;"><h3>🔒 ${r.name}</h3><p>Licenza: ${r.licenseCost.toFixed(2)}€</p></div><div class="unlock-wrapper"><span class="unlock-tooltip"><i class="fa-solid fa-circle-info"></i> REQUISITI:<br>• Paga ${r.licenseCost.toFixed(2)}€<br>• Assumi 1 Barista</span><button class="wood-btn btn-action" style="background:linear-gradient(#ff9800,#f57c00);" id="btn-unlock-${key}" onclick="unlockRecipe('${key}')">Sblocca</button></div>`;
+            }
+            container.appendChild(card);
+        });
+    }
+
+    function updateUI() {
+        document.getElementById('lbl-money').innerText = state.money.toFixed(2);
+        document.getElementById('lbl-capsules').innerText = state.capsules;
+        document.getElementById('lbl-milk').innerText = state.milk;
+        document.getElementById('count-baristas').innerText = state.baristas;
+        document.getElementById('cost-barista').innerText = state.baristaCost.toFixed(2);
+        document.getElementById('count-suppliers-capsules').innerText = state.suppliersCapsules;
+        document.getElementById('cost-supplier-capsules').innerText = state.supplierCapsulesCost.toFixed(2);
+        document.getElementById('count-suppliers-milk').innerText = state.suppliersMilk;
+        document.getElementById('cost-supplier-milk').innerText = state.supplierMilkCost.toFixed(2);
+        document.getElementById('showcase-espresso').innerText = state.inventory.espresso;
+        document.getElementById('showcase-cappuccino').innerText = state.inventory.cappuccino;
+        
+        let speedBonusPercent = (state.machineLevel - 1) * 10;
+        document.getElementById('lbl-machine-level').innerText = state.machineLevel;
+        document.getElementById('lbl-machine-speed-desc').innerText = `+${speedBonusPercent}% velocità`;
+        document.getElementById('cost-machine-upgrade').innerText = state.machineUpgradeCost.toFixed(2);
+        document.getElementById('lbl-machine-level-status').innerText = `Liv. ${state.machineLevel} (+${speedBonusPercent}%)`;
+
+        document.getElementById('btn-buy-capsules').disabled = state.money < 5.00;
+        document.getElementById('btn-buy-milk').disabled = state.money < 4.00;
+        document.getElementById('btn-hire-barista').disabled = state.money < state.baristaCost;
+        document.getElementById('btn-upgrade-machine').disabled = state.money < state.machineUpgradeCost;
+        document.getElementById('btn-hire-supplier-capsules').disabled = state.money < state.supplierCapsulesCost;
+        document.getElementById('btn-hire-supplier-milk').disabled = state.money < state.supplierMilkCost;
+
+        let requestedKey = state.currentRequestKey;
+        let isReadyInInventory = state.inventory[requestedKey] > 0;
+        let btnServe = document.getElementById('btn-serve-request');
+        if (state.isCustomerWaiting) {
+            if (isReadyInInventory) {
+                btnServe.disabled = false; btnServe.innerHTML = `Consegna! (+20%)`; btnServe.style.background = "linear-gradient(#4caf50, #2e7d32)"; btnServe.style.color="white";
+            } else {
+                btnServe.disabled = true; btnServe.innerHTML = `Manca 1 ${recipes[requestedKey].name}`; btnServe.style.background = "#cfd8dc"; btnServe.style.color = "#78909c";
+            }
+        }
+
+        Object.keys(recipes).forEach(key => {
+            let r = recipes[key];
+            if(r.unlocked) {
+                let b = document.getElementById(`btn-craft-${key}`); if(b) b.disabled = state.capsules < r.capsules || state.milk < r.milk;
+            } else {
+                let b = document.getElementById(`btn-unlock-${key}`); if(b) b.disabled = state.money < r.licenseCost || state.baristas < 1;
+            }
+        });
+
+        const craftContainer = document.getElementById('craft-queue-container');
+        let espressoJobs = state.craftQueue.filter(j => j.key === 'espresso');
+        let cappuccinoJobs = state.craftQueue.filter(j => j.key === 'cappuccino');
+        if (state.craftQueue.length === 0) { craftContainer.innerHTML = `<div style="color:#aaa; text-align:center;">Libera</div>`; } else {
+            craftContainer.innerHTML = '';
+            if (espressoJobs.length > 0) {
+                let isAct = state.craftQueue[0].id === espressoJobs[0].id; let pct = isAct ? (espressoJobs[0].progress / espressoJobs[0].totalTime) * 100 : 0;
+                let div = document.createElement('div'); div.className = 'delivery-item';
+                div.innerHTML = `<span>☕ <b>Caffè</b> <b>x${espressoJobs.length}</b></span><div class="mini-progress"><div class="mini-progress-bar craft-progress-bar" style="width: ${pct}%"></div></div>`;
+                craftContainer.appendChild(div);
+            }
+            if (cappuccinoJobs.length > 0) {
+                let isAct = state.craftQueue[0].id === cappuccinoJobs[0].id; let pct = isAct ? (cappuccinoJobs[0].progress / cappuccinoJobs[0].totalTime) * 100 : 0;
+                let div = document.createElement('div'); div.className = 'delivery-item';
+                div.innerHTML = `<span>🥛 <b>Cappuccino</b> <b>x${cappuccinoJobs.length}</b></span><div class="mini-progress"><div class="mini-progress-bar craft-progress-bar" style="width: ${pct}%"></div></div>`;
+                craftContainer.appendChild(div);
+            }
+        }
+
+        const deliveryContainer = document.getElementById('delivery-queue-container');
+        let capsDeliveries = state.incomingDeliveries.filter(d => d.type === 'capsules');
+        let milkDeliveries = state.incomingDeliveries.filter(d => d.type === 'milk');
+        if (state.incomingDeliveries.length === 0) { deliveryContainer.innerHTML = `<div style="color:#aaa; text-align:center;">Vuoto</div>`; } else {
+            deliveryContainer.innerHTML = '';
+            if (capsDeliveries.length > 0) {
+                let pct = (capsDeliveries[0].progress / capsDeliveries[0].totalTime) * 100;
+                let div = document.createElement('div'); div.className = 'delivery-item';
+                div.innerHTML = `<span>📦 <b>Capsule</b> <b>x${capsDeliveries.length}</b></span><div class="mini-progress"><div class="mini-progress-bar" style="width: ${pct}%"></div></div>`;
+                deliveryContainer.appendChild(div);
+            }
+            if (milkDeliveries.length > 0) {
+                let pct = (milkDeliveries[0].progress / milkDeliveries[0].totalTime) * 100;
+                let div = document.createElement('div'); div.className = 'delivery-item';
+                div.innerHTML = `<span>🥛 <b>Latte</b> <b>x${milkDeliveries.length}</b></span><div class="mini-progress"><div class="mini-progress-bar" style="width: ${pct}%"></div></div>`;
+                deliveryContainer.appendChild(div);
+            }
+        }
+    }
+
+    // --- MAIN CORE INTERVAL LOOP ---
+    let loopCounter = 0;
+    setInterval(function() {
+        loopCounter++;
+        
+        // Ogni 5 secondi (50 tick) esegue un salvataggio automatico silenzioso preventivo
+        if(loopCounter >= 50) { loopCounter = 0; saveGameData(); }
+
+        if (state.craftQueue.length > 0) {
+            let activeOrder = state.craftQueue[0]; activeOrder.progress += 0.1;
+            if (activeOrder.progress >= activeOrder.totalTime) {
+                state.inventory[activeOrder.key] += 1; createFloatingText(`+1 Pronto`, '#4caf50');
+                state.craftQueue.shift(); saveGameData(); updateUI();
+            } else { updateUI(); }
+        }
+
+        if (state.isCustomerWaiting) {
+            state.customerTimer -= 0.1; document.getElementById('request-timer-bar').style.width = `${(state.customerTimer / 10.0) * 100}%`;
+            if (state.customerTimer <= 0) {
+                state.isCustomerWaiting = false;
+                if (state.baristas > 0 && state.inventory[state.currentRequestKey] > 0) {
+                    state.inventory[state.currentRequestKey] -= 1; state.money += recipes[state.currentRequestKey].price;
+                }
+                generateCustomerRequest();
+            }
+        }
+
+        if (state.incomingDeliveries.length > 0) {
+            let rem = []; state.incomingDeliveries.forEach((del, idx) => {
+                del.progress += 0.1; if(del.progress >= del.totalTime) {
+                    if(del.type === 'capsules') state.capsules += 10; else state.milk += 10;
+                    rem.push(idx);
+                }
+            });
+            for (let i = rem.length - 1; i >= 0; i--) { state.incomingDeliveries.splice(rem[i], 1); }
+            saveGameData(); updateUI();
+        }
+
+        // Fornitori automatici (ogni 12 secondi)
+        if(state.suppliersCapsules > 0 && loopCounter % 120 === 0) {
+            let cost = state.suppliersCapsules * 4.20; if(state.money >= cost) { state.money -= cost; for(let s=0; s<state.suppliersCapsules; s++) state.incomingDeliveries.push({ id: Math.random(), type: 'capsules', totalTime: 4.0, progress: 0 }); }
+        }
+        if(state.suppliersMilk > 0 && loopCounter % 120 === 0) {
+            let cost = state.suppliersMilk * 3.50; if(state.money >= cost) { state.money -= cost; for(let s=0; s<state.suppliersMilk; s++) state.incomingDeliveries.push({ id: Math.random(), type: 'milk', totalTime: 4.0, progress: 0 }); }
+        }
+    }, 100);
+
+    // --- REGISTRAZIONE SERVICE WORKER PER PWA CODA MOBILE ---
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('sw.js').then(reg => console.log('PWA Pronto Offline!')).catch(err => console.log(err));
+        });
+    }
+
+    // CARICAMENTO INIZIALE
+    loadGameData();
+    generateCustomerRequest();
+    renderRecipesMenu();
+    updateUI();
+</script>
+</body>
+</html>
