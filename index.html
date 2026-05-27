@@ -30,7 +30,6 @@
             display: flex; flex-direction: column;
         }
 
-        /* ANIMAZIONE SHAKE (TERREMOTO) PER ERRORI */
         @keyframes shake {
             0%, 100% { transform: translate(0, 0); }
             10%, 30%, 50%, 70%, 90% { transform: translate(-4px, 1px); }
@@ -112,7 +111,7 @@
         .nav-item i { font-size: 1.3em; margin-bottom: 3px; }
         .nav-item.active { color: #fff9c4; background: rgba(255,255,255,0.05); font-weight: 700; }
 
-        /* --- BOX ORDINATIONE VISIVA --- */
+        /* --- BOX ORDINAZIONE --- */
         .customer-request-box {
             background: linear-gradient(135deg, #fffde7, #fff9c4);
             border: 3px solid #fbc02d; border-radius: 16px; padding: 12px; margin-bottom: 15px;
@@ -140,18 +139,15 @@
 
         .btn-serve-wide { grid-column: 1 / -1; margin-top: 4px; }
 
-        /* PULSANTI DI LEGNO ATTIVI E PULSANTI GRIGI DISABILITATI (MODIFICATO) */
         .wood-btn {
             width: 100%; background: linear-gradient(to bottom, #8d6e63, #5d4037);
             border: 3px solid #4e342e; border-bottom-width: 4px; border-radius: 12px;
             color: #fff9c4; font-family: 'Fredoka', sans-serif; font-size: 0.95em; padding: 10px;
             cursor: pointer; text-shadow: 1px 1px 0px rgba(0,0,0,0.5);
             display: flex; align-items: center; justify-content: center; gap: 6px;
-            transition: background 0.1s, border-color 0.1s;
         }
         .wood-btn:active:not(:disabled) { transform: translateY(2px); border-bottom-width: 2px; }
         
-        /* Regola per i pulsanti spenti/grigi */
         .wood-btn:disabled { 
             background: linear-gradient(to bottom, #b0bec5, #90a4ae) !important; 
             border-color: #78909c !important; 
@@ -184,7 +180,7 @@
         @keyframes floatUp { 0% { opacity: 0; transform: translateY(0); } 20% { opacity: 1; } 100% { opacity: 0; transform: translateY(-30px); } }
     </style>
 </head>
-<body id="body-container"> <!-- ID aggiunto al body per l'effetto terremoto -->
+<body id="body-container">
 
     <!-- 1. CRUSCOTTO FISSO IN ALTO -->
     <div class="top-dashboard">
@@ -238,7 +234,6 @@
                     <div class="progress-bar" id="request-timer-bar"></div>
                 </div>
 
-                <!-- Tasto consegna con intercettatore di errore click -->
                 <button id="btn-serve-request" class="wood-btn btn-serve-wide" onclick="serveCustomerFromInventory(event)" onmousedown="checkDisabledClick(this)">
                     <i class="fa-solid fa-hand-holding-dollar"></i> Consegna Ordine (+20%)
                 </button>
@@ -246,7 +241,6 @@
 
             <div style="margin: 20px 0; border-bottom: 2px dashed #d7ccc8;"></div>
 
-            <!-- CARD MIGLIORAMENTO MACCHINA -->
             <div class="card-item" style="background: #fff8e1; border-color: #ffe082; margin-top: 10px;">
                 <div class="item-info">
                     <h3><i class="fa-solid fa-gauge-high" style="color:#b71c1c;"></i> Caldaia Calore</h3>
@@ -255,7 +249,6 @@
                 <button id="btn-upgrade-machine" class="wood-btn btn-action" style="background: linear-gradient(#4caf50, #2e7d32);" onclick="upgradeMachine()" onmousedown="checkDisabledClick(this)">Migliora (<span id="cost-machine-upgrade">10.00</span>€)</button>
             </div>
 
-            <!-- CARD ASSUNZIONE BARISTA -->
             <div class="card-item" style="margin-top: 10px;">
                 <div class="item-info">
                     <h3><i class="fa-solid fa-user-tie"></i> Barista Aut.</h3>
@@ -333,7 +326,7 @@
     </div>
 
 <script>
-    // --- DATABASE CONFIGURAZIONE RICETTE ---
+    // --- CONFIGURAZIONE RICETTE ---
     const recipes = {
         espresso: { name: "Caffè Espresso", price: 2.00, capsules: 1, milk: 0, craftTime: 3.0, unlocked: true, licenseCost: 0, icon: "fa-solid fa-mug-hot" },
         cappuccino: { name: "Cappuccino Italiano", price: 4.50, capsules: 1, milk: 1, craftTime: 5.0, unlocked: false, licenseCost: 20.00, icon: "fa-solid fa-glass-water" }
@@ -351,24 +344,23 @@
         incomingDeliveries: [], craftQueue: []
     };
 
-    // --- FUNZIONE TRIGGER SCREEN SHAKE (NOVITÀ) ---
+    // --- MECCANICA TRIGGER FEEDBACK ERRORE SHAKE ---
     function triggerScreenShake() {
         const bodyContainer = document.getElementById('body-container');
-        bodyContainer.classList.remove('shake-effect'); // Reset se già presente
-        void bodyContainer.offsetWidth; // Trucchetto CSS per forzare il riavvio dell'animazione
+        bodyContainer.classList.remove('shake-effect'); 
+        void bodyContainer.offsetWidth; 
         bodyContainer.classList.add('shake-effect');
         setTimeout(() => bodyContainer.classList.remove('shake-effect'), 250);
     }
 
-    // Intercettatore di click sui bottoni disabilitati
     function checkDisabledClick(btnElement) {
-        if (btnElement.disabled) {
-            triggerScreenShake();
-        }
+        if (btnElement.disabled) { triggerScreenShake(); }
     }
 
-    // --- NAVIGAZIONE A SCHEDE ---
+    // --- NAVIGAZIONE A SCHEDE COMPATIBILE MOBILE ---
+    let currentActiveTabId = 'shop';
     function switchTab(tabId) {
+        currentActiveTabId = tabId;
         document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
         document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
 
@@ -376,10 +368,10 @@
         document.getElementById(`nav-${tabId}`).classList.add('active');
         
         if(tabId === 'craft') { renderRecipesMenu(); }
-        updateUI();
+        updateUI(); // Costringe la grafica a ridisegnare subito le code caricate
     }
 
-    // --- MECCANICHE DI SALVATAGGIO ---
+    // --- SALVATAGGIO PROGRESSI ---
     function saveGameData() {
         localStorage.setItem('coffee_tycoon_state', JSON.stringify(state));
         localStorage.setItem('coffee_tycoon_recipes', JSON.stringify(recipes));
@@ -423,7 +415,6 @@
             state.currentRequestKey = state.nextRequestKey;
         }
         state.nextRequestKey = unlocked[Math.floor(Math.random() * unlocked.length)];
-
         state.isCustomerWaiting = false; state.customerTimer = 10.0;
         
         let activeRecipe = recipes[state.currentRequestKey];
@@ -450,9 +441,7 @@
             state.capsules -= recipe.capsules; state.milk -= recipe.milk;
             state.craftQueue.push({ id: Date.now() + Math.random(), key: selectedKey, name: recipe.name, progress: 0, totalTime: getModifiedCraftTime(recipe.craftTime) });
             saveGameData(); updateUI();
-        } else {
-            triggerScreenShake();
-        }
+        } else { triggerScreenShake(); }
     }
 
     function serveCustomerFromInventory(event) {
@@ -463,9 +452,7 @@
             let cashGained = recipes[requiredKey].price * 1.20; state.money += cashGained;
             createFloatingText(`+${cashGained.toFixed(2)}€!`, '#4caf50', event.clientX, event.clientY);
             state.isCustomerWaiting = false; generateCustomerRequest(); saveGameData();
-        } else {
-            triggerScreenShake(); // Ti manca il prodotto pronto -> Trema lo schermo
-        }
+        } else { triggerScreenShake(); }
     }
 
     function upgradeMachine() {
@@ -536,7 +523,7 @@
         });
     }
 
-    // --- INTERFACCIA E DISEGNO CODE CORRETTE (RIPRISTINATO) ---
+    // --- NUOVO SISTEMA DI COSTRUZIONE HTML DELLE CODE (RISOLTO DA ZERO) ---
     function updateUI() {
         document.getElementById('lbl-money').innerText = state.money.toFixed(2) + "€";
         document.getElementById('lbl-capsules').innerText = state.capsules;
@@ -557,7 +544,6 @@
         document.getElementById('count-suppliers-milk').innerText = state.suppliersMilk;
         document.getElementById('cost-supplier-milk').innerText = state.supplierMilkCost.toFixed(2);
 
-        // DISABILITAZIONE BOTTONI FISICI CON CONVERSIONE GRIGIA AUTOMATICA CSS
         document.getElementById('btn-buy-capsules').disabled = state.money < 5.00;
         document.getElementById('btn-buy-milk').disabled = state.money < 4.00;
         document.getElementById('btn-hire-barista').disabled = state.money < state.baristaCost;
@@ -585,62 +571,60 @@
             }
         });
 
-        // DISEGNO LINEE DI PRODUZIONE SEPARATE FISSE (RISOLTO!)
+        // GENERATORE CODA MACCHINA (Innietta l'HTML a prescindere dal display:none)
         const craftContainer = document.getElementById('craft-queue-container');
-        let espressoJobs = state.craftQueue.filter(j => j.key === 'espresso');
-        let cappuccinoJobs = state.craftQueue.filter(j => j.key === 'cappuccino');
-        
-        if (state.craftQueue.length === 0) { 
-            craftContainer.innerHTML = `<div style="color:#aaa; text-align:center; font-size:0.85em;">Nessun macchinario avviato</div>`; 
-        } else {
-            craftContainer.innerHTML = '';
-            if (espressoJobs.length > 0) {
-                let isAct = state.craftQueue[0].id === espressoJobs[0].id; 
-                let pct = isAct ? (state.craftQueue[0].progress / state.craftQueue[0].totalTime) * 100 : 0;
-                let div = document.createElement('div'); div.className = 'delivery-item';
-                div.innerHTML = `<span>☕ <b>Caffè Espresso</b> <b>x${espressoJobs.length}</b></span><div class="mini-progress"><div class="mini-progress-bar craft-progress-bar" style="width: ${pct}%"></div></div>`;
-                craftContainer.appendChild(div);
-            }
-            if (cappuccinoJobs.length > 0) {
-                let isAct = state.craftQueue[0].id === cappuccinoJobs[0].id; 
-                let pct = isAct ? (state.craftQueue[0].progress / state.craftQueue[0].totalTime) * 100 : 0;
-                let div = document.createElement('div'); div.className = 'delivery-item';
-                div.innerHTML = `<span>🥛 <b>Cappuccino It.</b> <b>x${cappuccinoJobs.length}</b></span><div class="mini-progress"><div class="mini-progress-bar craft-progress-bar" style="width: ${pct}%"></div></div>`;
-                craftContainer.appendChild(div);
+        if (craftContainer) {
+            let espressoJobs = state.craftQueue.filter(j => j.key === 'espresso');
+            let cappuccinoJobs = state.craftQueue.filter(j => j.key === 'cappuccino');
+            
+            if (state.craftQueue.length === 0) { 
+                craftContainer.innerHTML = `<div style="color:#aaa; text-align:center; font-size:0.85em;">Nessun macchinario avviato</div>`; 
+            } else {
+                let htmlOutput = '';
+                if (espressoJobs.length > 0) {
+                    let isAct = state.craftQueue[0].id === espressoJobs[0].id; 
+                    let pct = isAct ? (state.craftQueue[0].progress / state.craftQueue[0].totalTime) * 100 : 0;
+                    htmlOutput += `<div class="delivery-item"><span>☕ <b>Caffè Espresso</b> <b>x${espressoJobs.length}</b></span><div class="mini-progress"><div class="mini-progress-bar craft-progress-bar" style="width: ${pct}%"></div></div></div>`;
+                }
+                if (cappuccinoJobs.length > 0) {
+                    let isAct = state.craftQueue[0].id === cappuccinoJobs[0].id; 
+                    let pct = isAct ? (state.craftQueue[0].progress / state.craftQueue[0].totalTime) * 100 : 0;
+                    htmlOutput += `<div class="delivery-item"><span>🥛 <b>Cappuccino It.</b> <b>x${cappuccinoJobs.length}</b></span><div class="mini-progress"><div class="mini-progress-bar craft-progress-bar" style="width: ${pct}%"></div></div></div>`;
+                }
+                craftContainer.innerHTML = htmlOutput;
             }
         }
 
-        // DISEGNO CODE LOGISTICA SPEDIZIONI (RISOLTO!)
+        // GENERATORE CODA LOGISTICA (Innietta l'HTML sempre in background)
         const deliveryContainer = document.getElementById('delivery-queue-container');
-        let capsDeliveries = state.incomingDeliveries.filter(d => d.type === 'capsules');
-        let milkDeliveries = state.incomingDeliveries.filter(d => d.type === 'milk');
-        
-        if (state.incomingDeliveries.length === 0) { 
-            deliveryContainer.innerHTML = `<div style="color:#aaa; text-align:center; font-size:0.85em;">Nessun furgone in viaggio</div>`; 
-        } else {
-            deliveryContainer.innerHTML = '';
-            if (capsDeliveries.length > 0) {
-                let pct = (capsDeliveries[0].progress / capsDeliveries[0].totalTime) * 100;
-                let div = document.createElement('div'); div.className = 'delivery-item';
-                div.innerHTML = `<span>📦 <b>Capsule</b> <b>x${capsDeliveries.length}</b></span><div class="mini-progress"><div class="mini-progress-bar" style="width: ${pct}%"></div></div>`;
-                deliveryContainer.appendChild(div);
-            }
-            if (milkDeliveries.length > 0) {
-                let pct = (milkDeliveries[0].progress / milkDeliveries[0].totalTime) * 100;
-                let div = document.createElement('div'); div.className = 'delivery-item';
-                div.innerHTML = `<span>🥛 <b>Latte</b> <b>x${milkDeliveries.length}</b></span><div class="mini-progress"><div class="mini-progress-bar" style="width: ${pct}%"></div></div>`;
-                deliveryContainer.appendChild(div);
+        if (deliveryContainer) {
+            let capsDeliveries = state.incomingDeliveries.filter(d => d.type === 'capsules');
+            let milkDeliveries = state.incomingDeliveries.filter(d => d.type === 'milk');
+            
+            if (state.incomingDeliveries.length === 0) { 
+                deliveryContainer.innerHTML = `<div style="color:#aaa; text-align:center; font-size:0.85em;">Nessun furgone in viaggio</div>`; 
+            } else {
+                let htmlOutput = '';
+                if (capsDeliveries.length > 0) {
+                    let pct = (capsDeliveries[0].progress / capsDeliveries[0].totalTime) * 100;
+                    htmlOutput += `<div class="delivery-item"><span>📦 <b>Capsule</b> <b>x${capsDeliveries.length}</b></span><div class="mini-progress"><div class="mini-progress-bar" style="width: ${pct}%"></div></div></div>`;
+                }
+                if (milkDeliveries.length > 0) {
+                    let pct = (milkDeliveries[0].progress / milkDeliveries[0].totalTime) * 100;
+                    htmlOutput += `<div class="delivery-item"><span>🥛 <b>Latte</b> <b>x${milkDeliveries.length}</b></span><div class="mini-progress"><div class="mini-progress-bar" style="width: ${pct}%"></div></div></div>`;
+                }
+                deliveryContainer.innerHTML = htmlOutput;
             }
         }
     }
 
-    // --- TIMERS ENGINE INALTERATO (100ms) ---
+    // --- TIMERS ENGINE (100ms) ---
     let loopCounter = 0;
     setInterval(function() {
         loopCounter++;
         if(loopCounter >= 50) { loopCounter = 0; saveGameData(); }
 
-        // Avanzamento Macchina
+        // Avanzamento Macchina espresso
         if (state.craftQueue.length > 0) {
             let activeOrder = state.craftQueue[0]; activeOrder.progress += 0.1;
             if (activeOrder.progress >= activeOrder.totalTime) {
@@ -651,7 +635,10 @@
 
         // Avanzamento Cliente al banco
         if (state.isCustomerWaiting) {
-            state.customerTimer -= 0.1; document.getElementById('request-timer-bar').style.width = `${(state.customerTimer / 10.0) * 100}%`;
+            state.customerTimer -= 0.1;
+            let barEl = document.getElementById('request-timer-bar');
+            if(barEl) barEl.style.width = `${(state.customerTimer / 10.0) * 100}%`;
+            
             if (state.customerTimer <= 0) {
                 state.isCustomerWaiting = false;
                 if (state.baristas > 0 && state.inventory[state.currentRequestKey] > 0) {
@@ -661,7 +648,7 @@
             }
         }
 
-        // Avanzamento furgoni merci
+        // Avanzamento furgoni merci della logistica
         if (state.incomingDeliveries.length > 0) {
             let rem = []; state.incomingDeliveries.forEach((del, idx) => {
                 del.progress += 0.1;
@@ -675,7 +662,7 @@
             saveGameData();
         }
 
-        // Rinfresca costantemente ad ogni ciclo
+        // Forza costantemente il rinfresco grafico ad ogni tick
         updateUI();
 
         // Fornitori automatici contrattuali
@@ -687,8 +674,14 @@
         }
     }, 100);
 
+    // --- NUOVA LOGICA DI SVEGLIA FORCE PER CACHE PWA ---
     if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js'); });
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('sw.js?v=2').then(reg => {
+                // Se c'è un aggiornamento, forza la pagina a rinfrescarsi da sola alla chiusura
+                reg.update();
+            });
+        });
     }
 
     loadGameData();
