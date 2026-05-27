@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Coffee Tycoon PRO - Animated Edition</title>
+    <title>Coffee Tycoon PRO - Fixed Layout</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#2b1a11">
@@ -157,8 +157,8 @@
             cursor: not-allowed;
         }
 
-        /* --- NUOVO DESIGN DEI BINARI DI ANIMAZIONE (NOVITÀ ESTETICA) --- */
-        .delivery-queue-box { background: #fff; border: 2px dashed #8d6e63; border-radius: 12px; padding: 10px; margin-bottom: 12px; }
+        /* --- BINARI DI ANIMAZIONE --- */
+        .delivery-queue-box { background: #fff; border: 2px dashed #8d6e63; border-radius: 12px; padding: 10px; margin-top: 10px; margin-bottom: 12px; }
         
         .animation-track-row {
             background: #f5f5f5; border: 1px solid #e0e0e0; border-radius: 10px;
@@ -166,24 +166,22 @@
         }
         .track-label-info { display: flex; justify-content: space-between; font-size: 0.75em; font-weight: bold; }
         
-        /* Il "binario" grigio dentro cui si muovono le icone */
         .track-lane {
             width: 100%; background: #e0e0e0; height: 26px; border-radius: 13px;
             position: relative; overflow: hidden; border: 1px inset rgba(0,0,0,0.05);
         }
 
-        /* L'oggetto che si sposta nello spazio */
         .track-actor {
             position: absolute; top: 50%; transform: translateY(-50%);
             display: flex; align-items: center; justify-content: center;
             font-size: 1.1em; transition: left 0.1s linear, right 0.1s linear;
             width: 24px; height: 24px;
         }
-        /* Colori specifici dei furgoni e icone chiesti da te */
-        .actor-capsule-truck { color: #212121; } /* Furgone Nero */
-        .actor-milk-truck { color: #ffffff; filter: drop-shadow(0px 1px 2px rgba(0,0,0,0.5)); } /* Furgone Bianco */
-        .actor-espresso-seed { color: #5d4037; } /* Chicco Marrone */
-        .actor-cappuccino-mug { color: #d7ccc8; filter: drop-shadow(0px 1px 1px rgba(0,0,0,0.3)); } /* Tazza Crema */
+        
+        .actor-capsule-truck { color: #212121; } 
+        .actor-milk-truck { color: #ffffff; filter: drop-shadow(0px 1px 2px rgba(0,0,0,0.5)); } 
+        .actor-espresso-seed { color: #5d4037; } 
+        .actor-cappuccino-mug { color: #d7ccc8; filter: drop-shadow(0px 1px 1px rgba(0,0,0,0.3)); } 
 
         .card-item { background: white; border: 2px solid #e0d4c3; border-radius: 12px; padding: 8px; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; }
         .item-info h3 { margin: 0; font-family: 'Fredoka', sans-serif; font-size: 0.95em; color: #3e2723; }
@@ -204,6 +202,7 @@
 </head>
 <body id="body-container">
 
+    <!-- 1. CRUSCOTTO FISSO IN ALTO -->
     <div class="top-dashboard">
         <div class="mini-card money-card" id="card-money">
             <i class="fa-solid fa-wallet"></i>
@@ -232,8 +231,10 @@
         </div>
     </div>
 
+    <!-- 2. CONTENITORE CENTRALE SCHEDE -->
     <div class="main-content">
         
+        <!-- SCHEDA 1: IL BANCO -->
         <div id="tab-shop" class="tab-panel active">
             <h2><i class="fa-solid fa-shop"></i> Ordini al Banco</h2>
             
@@ -279,28 +280,33 @@
             <button class="wood-btn" style="background: #c62828; margin-top: 25px; font-size: 0.8em;" onclick="resetGameData()">Reset Completo Gioco</button>
         </div>
 
+        <!-- SCHEDA 2: LA PRODUZIONE (BINARI SOTTO AL MENU DI AVVIO) -->
         <div id="tab-craft" class="tab-panel">
             <h2><i class="fa-solid fa-gears"></i> Linee di Produzione</h2>
             
+            <div style="font-weight: bold; margin-bottom: 10px; color: #5d4037; font-size: 0.9em;"><i class="fa-solid fa-list-check"></i> Sblocca Ricette e Avvia Cotture Manuali:</div>
+            <div id="recipes-list-container"></div>
+
+            <!-- SPOSTATO QUI: Monitoraggio ora posizionato SUBITO SOTTO la selezione della produzione -->
             <div class="delivery-queue-box" style="border-color: #4caf50; background-color: #fbfdfb;">
                 <div style="font-size: 0.75em; font-weight: bold; color:#1b5e20; margin-bottom: 5px;"><i class="fa-solid fa-fire-burner"></i> Caldaie Macchine (Destra ➔ Sinistra):</div>
                 <div id="craft-queue-container"></div>
             </div>
-
-            <div style="font-weight: bold; margin-bottom: 10px; color: #5d4037; font-size: 0.9em;"><i class="fa-solid fa-list-check"></i> Avvia Cotture Manuali:</div>
-            <div id="recipes-list-container"></div>
         </div>
 
+        <!-- SCHEDA 3: LA LOGISTICA (BINARI SOTTO AI PULSANTI DI ORDINE) -->
         <div id="tab-logistics" class="tab-panel">
             <h2><i class="fa-solid fa-truck"></i> Magazzino & Ordini</h2>
             
+            <div style="font-weight: bold; margin-bottom: 10px; color: #5d4037; font-size: 0.9em;"><i class="fa-solid fa-cart-shopping"></i> Seleziona cosa farti consegnare:</div>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px;">
                 <button id="btn-buy-capsules" class="wood-btn" onclick="orderIngredients('capsules')" onmousedown="checkDisabledClick(this)">10 Caps (-5€)</button>
                 <button id="btn-buy-milk" class="wood-btn" onclick="orderIngredients('milk')" onmousedown="checkDisabledClick(this)">10 Latte (-4€)</button>
             </div>
 
+            <!-- SPOSTATO QUI: Monitoraggio posizionato SUBITO SOTTO i tasti degli ordini merci -->
             <div class="delivery-queue-box">
-                <div style="font-size: 0.75em; font-weight: bold; color:#5d4037; margin-bottom: 5px;"><i class="fa-solid fa-truck-moving"></i> Furgoni Merci (Sinistra ➔ Destra):</div>
+                <div style="font-size: 0.75em; font-weight: bold; color:#5d4037; margin-bottom: 5px;"><i class="fa-solid fa-truck-moving"></i> Furgoni Merci in Viaggio (Sinistra ➔ Destra):</div>
                 <div id="delivery-queue-container"></div>
             </div>
 
@@ -326,6 +332,7 @@
 
     </div>
 
+    <!-- 3. BARRA DI NAVIGAZIONE IN BASSO -->
     <div class="bottom-nav">
         <button class="nav-item active" id="nav-shop" onclick="switchTab('shop')">
             <i class="fa-solid fa-shop"></i>
@@ -472,7 +479,6 @@
         }
     }
 
-    // Acquisto merci manuali
     function orderIngredients(type) {
         let cost = type === 'capsules' ? 5.00 : 4.00;
         if (state.money >= cost) {
@@ -504,6 +510,7 @@
     }
     function hireBarista() { addBaristaAutomation(false); }
 
+    // Fornitori contratti automatici
     function hireSupplier(type) {
         if (type === 'capsules' && state.money >= state.supplierCapsulesCost) {
             state.money -= state.supplierCapsulesCost; state.suppliersCapsules += 1; state.supplierCapsulesCost *= 1.6;
@@ -534,7 +541,6 @@
         });
     }
 
-    // --- INTERFACCIA E DISEGNO CON MOVIMENTO DELLE ICONE (MODIFICATO DA RICHIESTA) ---
     function updateUI() {
         document.getElementById('lbl-money').innerText = state.money.toFixed(2) + "€";
         document.getElementById('lbl-capsules').innerText = state.capsules;
@@ -582,7 +588,7 @@
             }
         });
 
-        // 1. CODICE ANIMAZIONE CALDAIA: DA DESTRA A SINISTRA (chicco e tazza)
+        // DISEGNO CALDAIA SPOSTATO SOTTO IL LISTINO RICETTE
         const craftContainer = document.getElementById('craft-queue-container');
         if (craftContainer) {
             let espressoJobs = state.craftQueue.filter(j => j.key === 'espresso');
@@ -592,32 +598,25 @@
                 craftContainer.innerHTML = `<div style="color:#aaa; text-align:center; font-size:0.85em; padding:10px;">Nessun macchinario avviato</div>`; 
             } else {
                 let htmlOutput = '';
-                
-                // Linea Espresso (Chicco va a Sinistra)
                 if (espressoJobs.length > 0) {
                     let isAct = state.craftQueue[0].id === espressoJobs[0].id; 
                     let pct = isAct ? (state.craftQueue[0].progress / state.craftQueue[0].totalTime) * 100 : 0;
-                    // Calcola la posizione 'right' (da 100% scende verso 0% per andare a sinistra)
                     let rightPosition = Math.max(0, 100 - pct);
-                    
                     htmlOutput += `
                         <div class="animation-track-row">
-                            <div class="track-label-info"><span>☕ Linea Espresso (Ordinati: x${espressoJobs.length})</span> <span>${isAct ? 'Preparazione...':'In Coda'}</span></div>
+                            <div class="track-label-info"><span>☕ Linea Caffè Espresso (In Coda: x${espressoJobs.length})</span> <span>${isAct ? 'Preparazione...':'In Coda'}</span></div>
                             <div class="track-lane">
                                 <div class="track-actor actor-espresso-seed" style="right: ${rightPosition}%;"><i class="fa-solid fa-seedling"></i></div>
                             </div>
                         </div>`;
                 }
-                
-                // Linea Cappuccino (Tazza va a Sinistra)
                 if (cappuccinoJobs.length > 0) {
                     let isAct = state.craftQueue[0].id === cappuccinoJobs[0].id; 
                     let pct = isAct ? (state.craftQueue[0].progress / state.craftQueue[0].totalTime) * 100 : 0;
                     let rightPosition = Math.max(0, 100 - pct);
-                    
                     htmlOutput += `
                         <div class="animation-track-row">
-                            <div class="track-label-info"><span>🥛 Linea Cappuccino (Ordinati: x${cappuccinoJobs.length})</span> <span>${isAct ? 'Montaggio Latte...':'In Coda'}</span></div>
+                            <div class="track-label-info"><span>🥛 Linea Cappuccino It. (In Coda: x${cappuccinoJobs.length})</span> <span>${isAct ? 'Montaggio Latte...':'In Coda'}</span></div>
                             <div class="track-lane">
                                 <div class="track-actor actor-cappuccino-mug" style="right: ${rightPosition}%;"><i class="fa-solid fa-mug-hot"></i></div>
                             </div>
@@ -627,7 +626,7 @@
             }
         }
 
-        // 2. CODICE ANIMAZIONE LOGISTICA: DA SINISTRA A DESTRA (furgone nero e bianco)
+        // DISEGNO LOGISTICA SPOSTATO SOTTO I TASTI DI ACQUISTO
         const deliveryContainer = document.getElementById('delivery-queue-container');
         if (deliveryContainer) {
             let capsDeliveries = state.incomingDeliveries.filter(d => d.type === 'capsules');
@@ -637,29 +636,23 @@
                 deliveryContainer.innerHTML = `<div style="color:#aaa; text-align:center; font-size:0.85em; padding:10px;">Nessun furgone in viaggio</div>`; 
             } else {
                 let htmlOutput = '';
-                
-                // Capsule (Furgone Nero va a Destra)
                 if (capsDeliveries.length > 0) {
                     let pct = (capsDeliveries[0].progress / capsDeliveries[0].totalTime) * 100;
-                    let leftPosition = Math.min(100, pct); // Va da 0% a 100% verso destra
-                    
+                    let leftPosition = Math.min(100, pct);
                     htmlOutput += `
                         <div class="animation-track-row">
-                            <div class="track-label-info"><span>📦 Carico Capsule (Furgoni: x${capsDeliveries.length})</span> <span>Arrivo in: ${Math.max(0, 4 - capsDeliveries[0].progress).toFixed(1)}s</span></div>
+                            <div class="track-label-info"><span>📦 Carico Capsule (In Viaggio: x${capsDeliveries.length})</span> <span>Consegna: ${Math.max(0, 4 - capsDeliveries[0].progress).toFixed(1)}s</span></div>
                             <div class="track-lane">
                                 <div class="track-actor actor-capsule-truck" style="left: ${leftPosition}%;"><i class="fa-solid fa-truck"></i></div>
                             </div>
                         </div>`;
                 }
-                
-                // Latte (Furgone Bianco va a Destra)
                 if (milkDeliveries.length > 0) {
                     let pct = (milkDeliveries[0].progress / milkDeliveries[0].totalTime) * 100;
                     let leftPosition = Math.min(100, pct);
-                    
                     htmlOutput += `
                         <div class="animation-track-row">
-                            <div class="track-label-info"><span>🥛 Carico Latte (Furgoni: x${milkDeliveries.length})</span> <span>Arrivo in: ${Math.max(0, 4 - milkDeliveries[0].progress).toFixed(1)}s</span></div>
+                            <div class="track-label-info"><span>🥛 Carico Latte (In Viaggio: x${milkDeliveries.length})</span> <span>Consegna: ${Math.max(0, 4 - milkDeliveries[0].progress).toFixed(1)}s</span></div>
                             <div class="track-lane">
                                 <div class="track-actor actor-milk-truck" style="left: ${leftPosition}%;"><i class="fa-solid fa-truck"></i></div>
                             </div>
@@ -670,7 +663,7 @@
         }
     }
 
-    // --- TIMERS LOGIC ENGINE (100ms) ---
+    // --- TIMERS ENGINE (100ms) ---
     let loopCounter = 0;
     setInterval(function() {
         loopCounter++;
@@ -700,10 +693,10 @@
             }
         }
 
-        // Avanzamento furgoni merci logistica
+        // Avanzamento furgoni logistica
         if (state.incomingDeliveries.length > 0) {
             let rem = []; state.incomingDeliveries.forEach((del, idx) => {
-                del.progress += 0.1; 
+                del.progress += 0.1;
                 if(del.progress >= del.totalTime) {
                     if(del.type === 'capsules') { state.capsules += 10; } else { state.milk += 10; }
                     createFloatingText(`+10 Consegnati!`, '#2196f3');
@@ -714,7 +707,7 @@
             saveGameData();
         }
 
-        // Forza costantemente l'aggiornamento grafico
+        // Aggiorna la grafica
         updateUI();
 
         // Fornitori contrattuali automatici
@@ -726,9 +719,9 @@
         }
     }, 100);
 
-    // SVEGLIA FORCE PER CACHE CON AGGIORNAMENTO DELLA VERSIONE MANIFEST (v=3)
+    // Incremento versione cache per forzare il refresh
     if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js?v=3'); });
+        window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js?v=4'); });
     }
 
     loadGameData();
