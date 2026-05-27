@@ -104,14 +104,36 @@
         .nav-item i { font-size: 1.3em; margin-bottom: 3px; }
         .nav-item.active { color: #fff9c4; background: rgba(255,255,255,0.05); font-weight: 700; }
 
-        /* --- ELEMENTI INTERFACCIA --- */
+        /* --- BOX ORDINAZIONE VISIVA CON ANTEPRIMA (NOVITÀ LOGICA) --- */
         .customer-request-box {
             background: linear-gradient(135deg, #fffde7, #fff9c4);
             border: 3px solid #fbc02d; border-radius: 16px; padding: 12px; margin-bottom: 15px;
-            display: flex; flex-direction: column; gap: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            display: grid; grid-template-columns: 1fr 1fr; gap: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
-        .request-bubble { background: white; padding: 8px; border-radius: 10px; border: 2px solid #fbc02d; font-weight: bold; text-align: center; font-size: 0.9em; }
         
+        .order-display-zone {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            background: white; border: 2px solid #ffe082; border-radius: 12px; padding: 8px; position: relative;
+        }
+        .order-display-zone i { font-size: 2.2em; color: #5d4037; margin-bottom: 4px; animation: bounce 2s infinite; }
+        .order-title { font-size: 0.7em; font-weight: 800; text-transform: uppercase; color: #f57f17; letter-spacing: 0.5px; }
+
+        /* Icona ordine successivo in arrivo */
+        .next-order-preview {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            background: #f5f5f5; border: 2px dashed #cfd8dc; border-radius: 12px; padding: 8px; opacity: 0.65;
+        }
+        .next-order-preview i { font-size: 1.5em; color: #78909c; margin-bottom: 4px; }
+        .next-title { font-size: 0.65em; font-weight: 700; color: #78909c; text-transform: uppercase; }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-4px); }
+        }
+
+        /* Tasto di consegna largo sotto ai box degli ordini */
+        .btn-serve-wide { grid-column: 1 / -1; margin-top: 4px; }
+
         .wood-btn {
             width: 100%; background: linear-gradient(to bottom, #8d6e63, #5d4037);
             border: 3px solid #4e342e; border-bottom-width: 4px; border-radius: 12px;
@@ -178,14 +200,25 @@
     <div class="main-content">
         
         <div id="tab-shop" class="tab-panel active">
-            <h2><i class="fa-solid fa-shop"></i> Ordini & Negozio</h2>
+            <h2><i class="fa-solid fa-shop"></i> Ordini al Banco</h2>
             
             <div class="customer-request-box">
-                <div class="request-bubble" id="lbl-request-text">In attesa di clienti...</div>
-                <div class="progress-container">
+                <div class="order-display-zone">
+                    <i id="lbl-request-icon" class="fa-solid fa-mug-hot"></i>
+                    <span class="order-title" id="lbl-request-name">Caffè Espresso</span>
+                </div>
+                
+                <div class="next-order-preview">
+                    <i id="lbl-next-icon" class="fa-solid fa-glass-water"></i>
+                    <span class="next-title">In Arrivo...</span>
+                    <span style="font-size:0.7em; font-weight:bold; color:#555;" id="lbl-next-name">Cappuccino</span>
+                </div>
+
+                <div class="progress-container" style="grid-column: 1 / -1; margin-top: 4px;">
                     <div class="progress-bar" id="request-timer-bar"></div>
                 </div>
-                <button id="btn-serve-request" class="wood-btn" onclick="serveCustomerFromInventory(event)">
+
+                <button id="btn-serve-request" class="wood-btn btn-serve-wide" onclick="serveCustomerFromInventory(event)">
                     <i class="fa-solid fa-hand-holding-dollar"></i> Consegna Ordine (+20%)
                 </button>
             </div>
@@ -274,10 +307,10 @@
     </div>
 
 <script>
-    // --- CONFIGURAZIONE RICETTE ---
+    // --- CONFIGURAZIONE RICETTE E ICONE ---
     const recipes = {
-        espresso: { name: "Caffè Espresso", price: 2.00, capsules: 1, milk: 0, craftTime: 3.0, unlocked: true, licenseCost: 0 },
-        cappuccino: { name: "Cappuccino Italiano", price: 4.50, capsules: 1, milk: 1, craftTime: 5.0, unlocked: false, licenseCost: 20.00 }
+        espresso: { name: "Caffè Espresso", price: 2.00, capsules: 1, milk: 0, craftTime: 3.0, unlocked: true, licenseCost: 0, icon: "fa-solid fa-mug-hot" },
+        cappuccino: { name: "Cappuccino Italiano", price: 4.50, capsules: 1, milk: 1, craftTime: 5.0, unlocked: false, licenseCost: 20.00, icon: "fa-solid fa-glass-water" }
     };
 
     let state = {
@@ -287,7 +320,12 @@
         suppliersMilk: 0, supplierMilkCost: 30.00,
         machineLevel: 1, machineUpgradeCost: 10.00,
         inventory: { espresso: 0, cappuccino: 0 },
-        currentRequestKey: 'espresso', customerTimer: 10.0, isCustomerWaiting: true,
+        
+        // Struttura Ordini Dinamici
+        currentRequestKey: 'espresso',
+        nextRequestKey: 'espresso', // NOVITÀ: Memorizza l'anteprima successiva
+        
+        customerTimer: 10.0, isCustomerWaiting: true,
         incomingDeliveries: [], craftQueue: []
     };
 
@@ -339,12 +377,34 @@
         document.body.appendChild(el); setTimeout(() => el.remove(), 800);
     }
 
+    // --- GENERATORE ORDINI CON ANTEPRIMA (NOVITÀ LOGICA) ---
     function generateCustomerRequest() {
         let unlocked = Object.keys(recipes).filter(k => recipes[k].unlocked);
-        state.currentRequestKey = unlocked[Math.floor(Math.random() * unlocked.length)];
-        state.isCustomerWaiting = false; state.customerTimer = 10.0;
-        let recipe = recipes[state.currentRequestKey];
-        document.getElementById('lbl-request-text').innerText = `Cliente: "Vorrei un ${recipe.name}!"`;
+        
+        // Se è la primissima attivazione, calcola sia l'attuale che il prossimo
+        if (!state.nextRequestKey || state.nextRequestKey === '') {
+            state.currentRequestKey = unlocked[Math.floor(Math.random() * unlocked.length)];
+        } else {
+            // L'ordine attuale diventa quello che prima era in anteprima!
+            state.currentRequestKey = state.nextRequestKey;
+        }
+
+        // Sceglie un NUOVO ordine casuale in anteprima per il cliente successivo
+        state.nextRequestKey = unlocked[Math.floor(Math.random() * unlocked.length)];
+
+        state.isCustomerWaiting = false; 
+        state.customerTimer = 10.0;
+        
+        // Aggiorna icone e scritte grafiche dell'ordine nel box
+        let activeRecipe = recipes[state.currentRequestKey];
+        let nextRecipe = recipes[state.nextRequestKey];
+
+        document.getElementById('lbl-request-icon').className = activeRecipe.icon;
+        document.getElementById('lbl-request-name').innerText = activeRecipe.name;
+
+        document.getElementById('lbl-next-icon').className = nextRecipe.icon;
+        document.getElementById('lbl-next-name').innerText = nextRecipe.name;
+
         document.getElementById('request-timer-bar').style.width = '100%';
         state.isCustomerWaiting = true;
         updateUI();
@@ -370,20 +430,17 @@
         if (state.inventory[requiredKey] > 0) {
             state.inventory[requiredKey] -= 1;
             let cashGained = recipes[requiredKey].price * 1.20; state.money += cashGained;
-            createFloatingText(`+${cashGained.toFixed(2)}€!`, '#2e7d32', event.clientX, event.clientY);
-            state.isCustomerWaiting = false; generateCustomerRequest(); saveGameData();
+            createFloatingText(`+${cashGained.toFixed(2)}€!`, '#4caf50', event.clientX, event.clientY);
+            state.isCustomerWaiting = false; 
+            generateCustomerRequest(); // Scala la coda degli ordini
+            saveGameData();
         }
     }
 
-    // --- RISOLUZIONE BUG GRAFICO: Forza l'aggiornamento UI immediato al click dell'upgrade ---
     function upgradeMachine() {
         if (state.money >= state.machineUpgradeCost) {
-            state.money -= state.machineUpgradeCost; 
-            state.machineLevel += 1; 
-            state.machineUpgradeCost *= 1.8;
-            createFloatingText(`Caldaia Migliorata!`, '#4caf50'); 
-            saveGameData(); 
-            updateUI(); // Forza il rinfresco immediato di testi e pulsanti
+            state.money -= state.machineUpgradeCost; state.machineLevel += 1; state.machineUpgradeCost *= 1.8;
+            createFloatingText(`Caldaia Migliorata!`, '#4caf50'); saveGameData(); updateUI();
         }
     }
 
@@ -427,7 +484,6 @@
         saveGameData(); updateUI();
     }
 
-    // Risoluzione sblocco con rinfresco
     function unlockRecipe(key) {
         let recipe = recipes[key];
         if (state.money >= recipe.licenseCost && state.baristas >= 1) {
@@ -441,7 +497,7 @@
         Object.keys(recipes).forEach(key => {
             let r = recipes[key]; let card = document.createElement('div'); card.className = 'card-item';
             if(r.unlocked) {
-                card.innerHTML = `<div class="item-info"><h3>☕ ${r.name}</h3><p>${r.price.toFixed(2)}€ | Usa: ${r.capsules} C. / ${r.milk} L.</p></div><button class="wood-btn btn-action" id="btn-craft-${key}" onclick="queueManualProduction('${key}')">Prepara</button>`;
+                card.innerHTML = `<div class="item-info"><h3><i class="${r.icon}"></i> ${r.name}</h3><p>${r.price.toFixed(2)}€ | Requisiti: ${r.capsules} C. / ${r.milk} L.</p></div><button class="wood-btn btn-action" id="btn-craft-${key}" onclick="queueManualProduction('${key}')">Prepara</button>`;
             } else {
                 card.innerHTML = `<div class="item-info" style="opacity:0.5;"><h3>🔒 ${r.name}</h3><p>Licenza: ${r.licenseCost.toFixed(2)}€</p></div><div class="unlock-wrapper"><span class="unlock-tooltip"><i class="fa-solid fa-circle-info"></i> REQUISITI:<br>• Paga ${r.licenseCost.toFixed(2)}€<br>• Assumi 1 Barista</span><button class="wood-btn btn-action" style="background:linear-gradient(#ff9800,#f57c00);" id="btn-unlock-${key}" onclick="unlockRecipe('${key}')">Sblocca</button></div>`;
             }
@@ -450,30 +506,25 @@
     }
 
     function updateUI() {
-        // Cruscotto fisso alto
         document.getElementById('lbl-money').innerText = state.money.toFixed(2) + "€";
         document.getElementById('lbl-capsules').innerText = state.capsules;
         document.getElementById('lbl-milk').innerText = state.milk;
         document.getElementById('showcase-espresso').innerText = state.inventory.espresso;
         document.getElementById('showcase-cappuccino').innerText = state.inventory.cappuccino;
         
-        // Sezione Negozio / Officina
         document.getElementById('count-baristas').innerText = state.baristas;
         document.getElementById('cost-barista').innerText = state.baristaCost.toFixed(2);
-        
         let speedBonusPercent = (state.machineLevel - 1) * 10;
         document.getElementById('lbl-machine-level').innerText = state.machineLevel;
         document.getElementById('lbl-machine-speed-desc').innerText = `Velocità manuale: +${speedBonusPercent}%`;
         document.getElementById('cost-machine-upgrade').innerText = state.machineUpgradeCost.toFixed(2);
         document.getElementById('lbl-machine-level-status').innerText = `Liv. ${state.machineLevel} (+${speedBonusPercent}% vel.)`;
 
-        // Sezione Logistica
         document.getElementById('count-suppliers-capsules').innerText = state.suppliersCapsules;
         document.getElementById('cost-supplier-capsules').innerText = state.supplierCapsulesCost.toFixed(2);
         document.getElementById('count-suppliers-milk').innerText = state.suppliersMilk;
         document.getElementById('cost-supplier-milk').innerText = state.supplierMilkCost.toFixed(2);
 
-        // Abilitazione/Disabilitazione pulsanti generali
         document.getElementById('btn-buy-capsules').disabled = state.money < 5.00;
         document.getElementById('btn-buy-milk').disabled = state.money < 4.00;
         document.getElementById('btn-hire-barista').disabled = state.money < state.baristaCost;
@@ -488,7 +539,7 @@
             if (isReadyInInventory) {
                 btnServe.disabled = false; btnServe.innerHTML = `<i class="fa-solid fa-check"></i> Consegna Subito!`; btnServe.style.background = "linear-gradient(#4caf50, #2e7d32)"; btnServe.style.color="white";
             } else {
-                btnServe.disabled = true; btnServe.innerHTML = `<i class="fa-solid fa-clock"></i> Manca 1 ${recipes[requestedKey].name}`; btnServe.style.background = "#cfd8dc"; btnServe.style.color = "#78909c";
+                btnServe.disabled = true; btnServe.innerHTML = `<i class="fa-solid fa-clock"></i> Manca 1 Prodotto`; btnServe.style.background = "#cfd8dc"; btnServe.style.color = "#78909c";
             }
         }
 
@@ -501,7 +552,6 @@
             }
         });
 
-        // Coda macchine
         const craftContainer = document.getElementById('craft-queue-container');
         let espressoJobs = state.craftQueue.filter(j => j.key === 'espresso');
         let cappuccinoJobs = state.craftQueue.filter(j => j.key === 'cappuccino');
@@ -521,7 +571,6 @@
             }
         }
 
-        // Coda Furgoni Logistica
         const deliveryContainer = document.getElementById('delivery-queue-container');
         let capsDeliveries = state.incomingDeliveries.filter(d => d.type === 'capsules');
         let milkDeliveries = state.incomingDeliveries.filter(d => d.type === 'milk');
@@ -548,7 +597,6 @@
         loopCounter++;
         if(loopCounter >= 50) { loopCounter = 0; saveGameData(); }
 
-        // Gestione ordini in cottura
         if (state.craftQueue.length > 0) {
             let activeOrder = state.craftQueue[0]; activeOrder.progress += 0.1;
             if (activeOrder.progress >= activeOrder.totalTime) {
@@ -557,22 +605,20 @@
             }
         }
 
-        // Gestione pazienza cliente al banco
         if (state.isCustomerWaiting) {
-            state.customerTimer -= 0.1;
+            state.customerTimer -= 0.1; document.getElementById('request-timer-bar').style.width = `${(state.customerTimer / 10.0) * 100}%`;
             if (state.customerTimer <= 0) {
                 state.isCustomerWaiting = false;
                 if (state.baristas > 0 && state.inventory[state.currentRequestKey] > 0) {
                     state.inventory[state.currentRequestKey] -= 1; state.money += recipes[state.currentRequestKey].price;
                 }
-                generateCustomerRequest();
+                generateCustomerRequest(); // Carica l'ordine successivo
             }
         }
 
-        // Gestione logistica furgoni merci
         if (state.incomingDeliveries.length > 0) {
             let rem = []; state.incomingDeliveries.forEach((del, idx) => {
-                del.progress += 0.1; 
+                del.progress += 0.1;
                 if(del.progress >= del.totalTime) {
                     if(del.type === 'capsules') { state.capsules += 10; } else { state.milk += 10; }
                     createFloatingText(`+10 Consegnati!`, '#2196f3');
@@ -583,10 +629,8 @@
             saveGameData();
         }
 
-        // Rinfresca l'interfaccia ad ogni tick di secondo
         updateUI();
 
-        // Fornitori fissi
         if(state.suppliersCapsules > 0 && loopCounter % 120 === 0) {
             let cost = state.suppliersCapsules * 4.20; if(state.money >= cost) { state.money -= cost; for(let s=0; s<state.suppliersCapsules; s++) state.incomingDeliveries.push({ id: Math.random(), type: 'capsules', totalTime: 4.0, progress: 0 }); }
         }
@@ -600,6 +644,8 @@
     }
 
     loadGameData();
+    // Inizializzazione della catena di ordini dinamica
+    state.nextRequestKey = ''; 
     generateCustomerRequest();
     renderRecipesMenu();
     updateUI();
