@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Coffee Tycoon PRO</title>
+    <title>Coffee Tycoon PRO - Parallel Production</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#2b1a11">
@@ -148,7 +148,6 @@
         }
         .wood-btn:active:not(:disabled) { transform: translateY(2px); border-bottom-width: 2px; }
         
-        /* I PULSANTI DISABILITATI DIVENTANO GRIGI COMPLETI */
         .wood-btn:disabled { 
             background: linear-gradient(to bottom, #b0bec5, #90a4ae) !important; 
             border-color: #78909c !important; 
@@ -158,7 +157,7 @@
             cursor: not-allowed;
         }
 
-        /* --- STILI PER I BINARI DI ANIMAZIONE --- */
+        /* --- CLASSI CSS PER LE BARRE E I BINARI ANIMATI --- */
         .progress-container { width: 100%; background: #e0e0e0; height: 12px; border-radius: 6px; overflow: hidden; position: relative; }
         .progress-bar { width: 0%; height: 100%; background: #fbc02d; transition: width 0.1s linear; }
 
@@ -289,7 +288,7 @@
             <div id="recipes-list-container"></div>
 
             <div class="delivery-queue-box" style="border-color: #4caf50; background-color: #fbfdfb;">
-                <div style="font-size: 0.75em; font-weight: bold; color:#1b5e20; margin-bottom: 5px;"><i class="fa-solid fa-fire-burner"></i> Caldaie Macchine (Destra ➔ Sinistra):</div>
+                <div style="font-size: 0.75em; font-weight: bold; color:#1b5e20; margin-bottom: 5px;"><i class="fa-solid fa-fire-burner"></i> Caldaie Macchine (Funzionamento in Parallelo):</div>
                 <div id="craft-queue-container"></div>
             </div>
         </div>
@@ -377,6 +376,7 @@
         if (btnElement && btnElement.disabled) { triggerScreenShake(); }
     }
 
+    // --- NAVIGAZIONE A SCHEDE ---
     function switchTab(tabId) {
         document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
         document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
@@ -388,6 +388,7 @@
         updateUI(); 
     }
 
+    // --- MECCANICHE DI SALVATAGGIO ---
     function saveGameData() {
         localStorage.setItem('coffee_tycoon_state', JSON.stringify(state));
         localStorage.setItem('coffee_tycoon_recipes', JSON.stringify(recipes));
@@ -483,9 +484,7 @@
             state.money -= cost;
             state.incomingDeliveries.push({ id: Date.now() + Math.random(), type: type, name: type === 'capsules' ? "Capsule" : "Latte", progress: 0, totalTime: 4.0 });
             updateUI();
-        } else {
-            triggerScreenShake();
-        }
+        } else { triggerScreenShake(); }
     }
 
     function addBaristaAutomation(isInitLoad = false) {
@@ -542,14 +541,14 @@
     }
 
     function updateUI() {
-        // Cruscotto alto
+        // Cruscotto risorse fisso
         document.getElementById('lbl-money').innerText = state.money.toFixed(2) + "€";
         document.getElementById('lbl-capsules').innerText = state.capsules;
         document.getElementById('lbl-milk').innerText = state.milk;
         document.getElementById('showcase-espresso').innerText = state.inventory.espresso;
         document.getElementById('showcase-cappuccino').innerText = state.inventory.cappuccino;
         
-        // Sezione Negozio
+        // Sezione Officina
         let countBaristasEl = document.getElementById('count-baristas');
         if (countBaristasEl) countBaristasEl.innerText = state.baristas;
         let costBaristaEl = document.getElementById('cost-barista');
@@ -575,7 +574,7 @@
         let costSuppMilk = document.getElementById('cost-supplier-milk');
         if (costSuppMilk) costSuppMilk.innerText = state.supplierMilkCost.toFixed(2);
 
-        // Disabilitazione pulsanti generali
+        // Disabilitazione e colorazione grigia reattiva dei pulsanti
         let btnBuyCaps = document.getElementById('btn-buy-capsules');
         if (btnBuyCaps) btnBuyCaps.disabled = state.money < 5.00;
         let btnBuyMilk = document.getElementById('btn-buy-milk');
@@ -606,7 +605,7 @@
             let bu = document.getElementById(`btn-unlock-${key}`); if(bu && !r.unlocked) bu.disabled = state.money < r.licenseCost || state.baristas < 1;
         });
 
-        // 1. ANIMAZIONE BINARIO CALDAIA (RISOLTA LOGICA DI TRACCIAMENTO)
+        // --- AGGIORNATO: RENDERING DELLE RIGHE DI PRODUZIONE IN PARALLELO SIMULTANEO ---
         const craftContainer = document.getElementById('craft-queue-container');
         if (craftContainer) {
             let espressoJobs = state.craftQueue.filter(j => j.key === 'espresso');
@@ -616,25 +615,29 @@
                 craftContainer.innerHTML = `<div style="color:#aaa; text-align:center; font-size:0.85em; padding:10px;">Nessun macchinario avviato</div>`; 
             } else {
                 let htmlOutput = '';
+                
+                // Linea Espresso (lavora se è in testa al suo gruppo)
                 if (espressoJobs.length > 0) {
-                    let isAct = state.craftQueue[0].id === espressoJobs[0].id; 
-                    let pct = isAct ? (state.craftQueue[0].progress / state.craftQueue[0].totalTime) * 100 : 0;
+                    let activeEspresso = espressoJobs[0];
+                    let pct = (activeEspresso.progress / activeEspresso.totalTime) * 100;
                     let rightPosition = Math.max(0, 100 - pct);
                     htmlOutput += `
                         <div class="animation-track-row">
-                            <div class="track-label-info"><span>☕ Linea Caffè Espresso (In Coda: x${espressoJobs.length})</span> <span>${isAct ? 'Preparazione...':'In Coda'}</span></div>
+                            <div class="track-label-info"><span>☕ Linea Caffè Espresso (In Coda: x${espressoJobs.length})</span> <span>In Cottura...</span></div>
                             <div class="track-lane">
                                 <div class="track-actor actor-espresso-seed" style="right: ${rightPosition}%;"><i class="fa-solid fa-seedling"></i></div>
                             </div>
                         </div>`;
                 }
+                
+                // Linea Cappuccino (lavora IN CONTEMPORANEA se è in testa al suo gruppo)
                 if (cappuccinoJobs.length > 0) {
-                    let isAct = state.craftQueue[0].id === cappuccinoJobs[0].id; 
-                    let pct = isAct ? (state.craftQueue[0].progress / state.craftQueue[0].totalTime) * 100 : 0;
+                    let activeCappuccino = cappuccinoJobs[0];
+                    let pct = (activeCappuccino.progress / activeCappuccino.totalTime) * 100;
                     let rightPosition = Math.max(0, 100 - pct);
                     htmlOutput += `
                         <div class="animation-track-row">
-                            <div class="track-label-info"><span>🥛 Linea Cappuccino It. (In Coda: x${cappuccinoJobs.length})</span> <span>${isAct ? 'Montaggio Latte...':'In Coda'}</span></div>
+                            <div class="track-label-info"><span>🥛 Linea Cappuccino It. (In Coda: x${cappuccinoJobs.length})</span> <span>In Cottura...</span></div>
                             <div class="track-lane">
                                 <div class="track-actor actor-cappuccino-mug" style="right: ${rightPosition}%;"><i class="fa-solid fa-mug-hot"></i></div>
                             </div>
@@ -644,7 +647,7 @@
             }
         }
 
-        // 2. ANIMAZIONE BINARIO FURGONI LOGISTICA
+        // RENDERING DELLE RIGHE LOGISTICA SPEDIZIONI
         const deliveryContainer = document.getElementById('delivery-queue-container');
         if (deliveryContainer) {
             let capsDeliveries = state.incomingDeliveries.filter(d => d.type === 'capsules');
@@ -681,20 +684,43 @@
         }
     }
 
-    // --- TIMERS ENGINE ---
+    // --- TIMERS ENGINE IN PARALLELO MULTI-CALDAIA (MODIFICATO COMPLETO) ---
     let loopCounter = 0;
     setInterval(function() {
         loopCounter++;
         if(loopCounter >= 50) { loopCounter = 0; saveGameData(); }
 
+        // --- AVANZAMENTO IN PARALLELO DELLE CALDAIE PRODUZIONE ---
         if (state.craftQueue.length > 0) {
-            let activeOrder = state.craftQueue[0]; activeOrder.progress += 0.1;
-            if (activeOrder.progress >= activeOrder.totalTime) {
-                state.inventory[activeOrder.key] += 1; createFloatingText(`+1 Pronto!`, '#4caf50');
-                state.craftQueue.shift(); saveGameData();
+            // Estraiamo il primo caffè e il primo cappuccino in coda
+            let activeEspresso = state.craftQueue.find(j => j.key === 'espresso');
+            let activeCappuccino = state.craftQueue.find(j => j.key === 'cappuccino');
+            
+            // Fai avanzare la caldaia Caffè se esiste un ordine
+            if (activeEspresso) {
+                activeEspresso.progress += 0.1;
+                if (activeEspresso.progress >= activeEspresso.totalTime) {
+                    state.inventory.espresso += 1;
+                    createFloatingText(`+1 Caffè Pronto!`, '#4caf50');
+                    // Rimuove questo specifico lavoro dall'array generale
+                    state.craftQueue = state.craftQueue.filter(j => j.id !== activeEspresso.id);
+                    saveGameData();
+                }
+            }
+
+            // Fai avanzare IN CONTEMPORANEA la caldaia Cappuccino se esiste un ordine
+            if (activeCappuccino) {
+                activeCappuccino.progress += 0.1;
+                if (activeCappuccino.progress >= activeCappuccino.totalTime) {
+                    state.inventory.cappuccino += 1;
+                    createFloatingText(`+1 Cappuccino Pronto!`, '#4caf50');
+                    state.craftQueue = state.craftQueue.filter(j => j.id !== activeCappuccino.id);
+                    saveGameData();
+                }
             }
         }
 
+        // Avanzamento Cliente al banco
         if (state.isCustomerWaiting) {
             state.customerTimer -= 0.1;
             let barEl = document.getElementById('request-timer-bar');
@@ -709,6 +735,7 @@
             }
         }
 
+        // Avanzamento furgoni logistica merci
         if (state.incomingDeliveries.length > 0) {
             let rem = []; state.incomingDeliveries.forEach((del, idx) => {
                 del.progress += 0.1;
@@ -724,6 +751,7 @@
 
         updateUI();
 
+        // Contratti di fornitura automatica
         if(state.suppliersCapsules > 0 && loopCounter % 120 === 0) {
             let cost = state.suppliersCapsules * 4.20; if(state.money >= cost) { state.money -= cost; for(let s=0; s<state.suppliersCapsules; s++) state.incomingDeliveries.push({ id: Math.random(), type: 'capsules', totalTime: 4.0, progress: 0 }); }
         }
@@ -732,8 +760,9 @@
         }
     }, 100);
 
+    // Caricamento della cache PWA (Portato a v=8 per azzerare i file passati)
     if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js?v=7'); });
+        window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js?v=8'); });
     }
 
     loadGameData();
