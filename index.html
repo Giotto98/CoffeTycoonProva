@@ -2,11 +2,9 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <!-- Ottimizzazione Mobile: Blocca lo zoom accidentale sui doppi tocchi rapidi -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Coffee Tycoon PRO</title>
     
-    <!-- Collegamento al Manifest della PWA -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#2b1a11">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -19,228 +17,278 @@
     
     <style>
         * { box-sizing: border-box; user-select: none; -webkit-user-select: none; touch-action: manipulation; }
+        
+        /* Layout fisso bloccato all'altezza dello schermo dello smartphone */
+        html, body { 
+            margin: 0; padding: 0; width: 100%; height: 100%; 
+            overflow: hidden; font-family: 'Quicksand', sans-serif;
+        }
+
         body {
-            font-family: 'Quicksand', sans-serif;
             background-color: #1a0f0a;
             background-image: radial-gradient(circle, rgba(45,24,16,0.95) 0%, rgba(21,10,6,0.98) 100%);
-            color: #3e2723; margin: 0; padding: 10px;
-            min-height: 100vh; display: flex; align-items: center; justify-content: center;
-        }
-        .game-wrapper {
-            width: 100%; max-width: 1150px; background: #2b1a11;
-            border: 4px solid #5d4037; border-radius: 24px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.8); padding: 15px;
-        }
-        .header-wood {
-            background: linear-gradient(to bottom, #8d6e63, #4e342e);
-            border: 3px solid #d7ccc8; border-radius: 20px; padding: 10px; text-align: center;
-            position: relative;
-        }
-        .header-wood h1 { font-family: 'Fredoka', sans-serif; color: #fff9c4; margin: 0; font-size: 2em; text-shadow: 2px 3px 0px #3e2723; }
-        
-        /* Bottone Reset Dati */
-        .btn-reset-data {
-            position: absolute; right: 15px; top: 15px; background: #c62828; color: white;
-            border: none; padding: 5px 10px; border-radius: 6px; font-size: 0.75em; font-weight: bold;
-            cursor: pointer; font-family: 'Fredoka', sans-serif;
+            color: #3e2723;
+            display: flex; flex-direction: column;
         }
 
-        /* --- RICHIESTA CLIENTE --- */
+        /* --- CRUSCOTTO DELLE RISORSE IN ALTO (FISSO) --- */
+        .top-dashboard {
+            background: linear-gradient(to bottom, #4e342e, #2b1a11);
+            border-bottom: 3px solid #5d4037;
+            padding: 10px 8px;
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 5px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+            z-index: 10;
+        }
+
+        .mini-card {
+            background: rgba(255, 255, 255, 0.9);
+            border: 2px solid #8d6e63;
+            border-radius: 10px;
+            padding: 4px 2px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .mini-card i { font-size: 0.9em; margin-bottom: 2px; }
+        .mini-card.money-card { background: #fff8e1; border-color: #ffb300; }
+        .mini-card.money-card i { color: #ff8f00; }
+        .mini-card.inv-card { background: #f1f8e9; border-color: #7cb342; }
+        .mini-card.inv-card i { color: #558b2f; }
+
+        .dash-label { font-size: 0.6em; text-transform: uppercase; font-weight: 700; color: #5d4037; }
+        .dash-value { font-family: 'Fredoka', sans-serif; font-size: 0.85em; font-weight: 700; color: #1a0f0a; word-break: break-all; }
+
+        /* --- CONTENITORE DELLE SCHEDE (CENTRALE) --- */
+        .main-content {
+            flex: 1;
+            padding: 12px;
+            overflow-y: auto; /* Permette lo scroll solo dentro la scheda attiva se serve */
+            padding-bottom: 80px; /* Spazio per non coprire i tasti sotto */
+        }
+
+        .tab-panel {
+            background: #fcf8f2;
+            border: 3px solid #5d4037;
+            border-radius: 20px;
+            padding: 15px;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.3);
+            display: none; /* Nascoste di base, attivate via JS */
+            height: 100%;
+            overflow-y: auto;
+        }
+
+        .tab-panel.active { display: block; }
+
+        h2 { font-family: 'Fredoka', sans-serif; color: #4e342e; text-align: center; margin-top: 0; border-bottom: 2px dashed #d7ccc8; padding-bottom: 5px; font-size: 1.2em; text-transform: uppercase;}
+
+        /* --- MENU DI NAVIGAZIONE IN BASSO (BOTTOM NAVBAR) --- */
+        .bottom-nav {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            height: 65px; background: linear-gradient(to top, #2b1a11, #4e342e);
+            border-top: 3px solid #5d4037;
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            z-index: 10; box-shadow: 0 -4px 10px rgba(0,0,0,0.3);
+        }
+
+        .nav-item {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            color: #d7ccc8; border: none; background: none; cursor: pointer;
+            font-family: 'Fredoka', sans-serif; font-size: 0.8em; font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .nav-item i { font-size: 1.3em; margin-bottom: 3px; }
+        .nav-item.active { color: #fff9c4; background: rgba(255,255,255,0.05); font-weight: 700; }
+
+        /* --- ELEMENTI INTERFACCIA RIUTILIZZATI --- */
         .customer-request-box {
             background: linear-gradient(135deg, #fffde7, #fff9c4);
-            border: 3px solid #fbc02d; border-radius: 16px; padding: 12px; margin: 15px 0;
-            display: grid; grid-template-columns: 1.4fr 1fr 1fr; align-items: center; gap: 10px;
-            box-shadow: 0 6px 12px rgba(0,0,0,0.25);
+            border: 3px solid #fbc02d; border-radius: 16px; padding: 12px; margin-bottom: 15px;
+            display: flex; flex-direction: column; gap: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
-        .request-bubble { background: white; padding: 6px 10px; border-radius: 12px; border: 2px solid #fbc02d; font-weight: bold; font-size: 0.9em; }
-        .progress-container { width: 100%; background: #e0e0e0; height: 12px; border-radius: 6px; overflow: hidden; position: relative; }
-        .progress-bar { width: 100%; height: 100%; background: #fbc02d; width: 0%; transition: width 0.1s linear; }
-
-        /* --- STATS BAR --- */
-        .stats-bar { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 15px; }
-        @media (min-width: 600px) { .stats-bar { grid-template-columns: repeat(4, 1fr); } }
-        .stat-card {
-            background: linear-gradient(135deg, #efebe9, #d7ccc8);
-            border: 3px solid #5d4037; border-radius: 16px; padding: 8px;
-            display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-        }
-        .stat-details { display: flex; flex-direction: column; }
-        .stat-label { font-size: 0.75em; text-transform: uppercase; font-weight: 700; color: #6d4c41; }
-        .stat-value { font-family: 'Fredoka', sans-serif; font-size: 1.1em; color: #3e2723; font-weight: 700; }
-
-        /* --- GRIGLIA GIOCO --- */
-        .game-grid { display: grid; grid-template-columns: 1fr; gap: 15px; }
-        @media (min-width: 800px) { .game-grid { grid-template-columns: 1.2fr 1fr; } }
-        .panel { background: #fcf8f2; border: 4px solid #5d4037; border-radius: 20px; padding: 15px; box-shadow: 0 8px 16px rgba(0,0,0,0.5); }
-        h2 { font-family: 'Fredoka', sans-serif; color: #4e342e; text-align: center; margin-top: 0; border-bottom: 2px dashed #d7ccc8; padding-bottom: 5px; font-size: 1.2em;}
-
+        .request-bubble { background: white; padding: 8px; border-radius: 10px; border: 2px solid #fbc02d; font-weight: bold; text-align: center; font-size: 0.9em; }
+        
         .wood-btn {
             width: 100%; background: linear-gradient(to bottom, #8d6e63, #5d4037);
             border: 3px solid #4e342e; border-bottom-width: 4px; border-radius: 12px;
             color: #fff9c4; font-family: 'Fredoka', sans-serif; font-size: 0.95em; padding: 10px;
-            margin-bottom: 8px; cursor: pointer; text-shadow: 1px 1px 0px rgba(0,0,0,0.5);
+            cursor: pointer; text-shadow: 1px 1px 0px rgba(0,0,0,0.5);
             display: flex; align-items: center; justify-content: center; gap: 6px;
         }
         .wood-btn:active:not(:disabled) { transform: translateY(2px); border-bottom-width: 2px; }
-        .wood-btn:disabled { background: linear-gradient(to bottom, #cfd8dc, #b0bec5); border-color: #90a4ae; color: #78909c; text-shadow: none; cursor: not-allowed; border-bottom-width: 2px; }
+        .wood-btn:disabled { background: linear-gradient(to bottom, #cfd8dc, #b0bec5); border-color: #90a4ae; color: #78909c; text-shadow: none; border-bottom-width: 2px; }
 
-        .delivery-queue-box { background: #fff; border: 2px dashed #8d6e63; border-radius: 12px; padding: 8px; margin-top: 8px; }
-        .delivery-item { display: flex; align-items: center; justify-content: space-between; font-size: 0.8em; background: #f5f5f5; padding: 6px 10px; border-radius: 8px; margin-bottom: 4px; }
-        .mini-progress { width: 80px; background: #e0e0e0; height: 8px; border-radius: 4px; overflow: hidden; }
+        .delivery-queue-box { background: #fff; border: 2px dashed #8d6e63; border-radius: 12px; padding: 8px; margin-bottom: 12px; }
+        .delivery-item { display: flex; align-items: center; justify-content: space-between; font-size: 0.75em; background: #f5f5f5; padding: 6px 10px; border-radius: 8px; margin-bottom: 4px; }
+        .mini-progress { width: 75px; background: #e0e0e0; height: 8px; border-radius: 4px; overflow: hidden; }
         .mini-progress-bar { height: 100%; background: #2196f3; width: 0%; }
         .craft-progress-bar { background: #4caf50 !important; }
 
-        .card-item { background: white; border: 2px solid #e0d4c3; border-radius: 12px; padding: 8px; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; position: relative; }
-        .item-info h3 { margin: 0; font-family: 'Fredoka', sans-serif; font-size: 1em; color: #3e2723; display: flex; align-items: center; gap: 6px; }
+        .card-item { background: white; border: 2px solid #e0d4c3; border-radius: 12px; padding: 10px; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; }
+        .item-info h3 { margin: 0; font-family: 'Fredoka', sans-serif; font-size: 0.95em; color: #3e2723; }
         .item-info p { margin: 2px 0 0 0; font-size: 0.75em; color: #795548; font-weight: bold; }
-        .btn-action { font-size: 0.8em; padding: 6px 10px; border-radius: 8px; width: auto; margin: 0; }
+        .btn-action { font-size: 0.75em; padding: 6px 10px; border-radius: 8px; width: auto; margin: 0; }
 
-        /* TOOLTIP ADATTATO MOBILE */
-        .unlock-wrapper { position: relative; display: inline-block; }
+        .unlock-wrapper { position: relative; }
         .unlock-tooltip {
-            visibility: hidden; width: 200px; background-color: #3e2723; color: #fff9c4;
-            text-align: center; border-radius: 8px; padding: 8px; position: absolute;
-            z-index: 10; bottom: 125%; left: 50%; transform: translateX(-50%);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3); font-size: 0.75em; font-weight: bold;
-            line-height: 1.3em; border: 2px solid #ff9800; opacity: 0; transition: opacity 0.2s;
-            pointer-events: none;
+            visibility: hidden; width: 180px; background-color: #3e2723; color: #fff9c4;
+            text-align: center; border-radius: 8px; padding: 6px; position: absolute;
+            z-index: 10; bottom: 115%; right: 0; box-shadow: 0 4px 8px rgba(0,0,0,0.3); font-size: 0.7em;
         }
-        .unlock-wrapper:hover .unlock-tooltip, .unlock-wrapper:active .unlock-tooltip { visibility: visible; opacity: 1; }
+        .unlock-wrapper:hover .unlock-tooltip, .unlock-wrapper:active .unlock-tooltip { visibility: visible; }
 
-        /* VETRINA INVENTARIO */
-        .showcase-container {
-            background: linear-gradient(to bottom, #eae0d5, #c6ac95);
-            border: 3px solid #5d4037; border-radius: 16px; padding: 10px; margin-bottom: 15px;
-            display: flex; justify-content: space-around; align-items: center; box-shadow: inset 0 2px 6px rgba(0,0,0,0.2);
-        }
-        .showcase-slot {
-            background: white; border: 2px solid #5d4037; border-radius: 12px; padding: 6px 12px;
-            text-align: center; min-width: 100px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-        .showcase-count { font-family: 'Fredoka', sans-serif; font-size: 1.3em; color: #e65100; font-weight: bold; }
-        .showcase-label { font-size: 0.7em; font-weight: bold; color: #5d4037; text-transform: uppercase; margin-top: 2px; }
-
-        .alert-bar { grid-column: 1 / -1; background: linear-gradient(to right, #ffe0b2, #ffcc80); border: 2px solid #f57c00; border-radius: 12px; padding: 8px; text-align: center; font-weight: bold; color: #e65100; display: none; font-family: 'Fredoka', sans-serif; margin-top: 15px; }
         .floating-text { position: absolute; font-family: 'Fredoka', sans-serif; font-weight: 700; font-size: 1.1em; pointer-events: none; animation: floatUp 0.8s ease-out forwards; z-index: 100; }
         @keyframes floatUp { 0% { opacity: 0; transform: translateY(0); } 20% { opacity: 1; } 100% { opacity: 0; transform: translateY(-30px); } }
     </style>
 </head>
 <body>
 
-<div class="game-wrapper">
-    <div class="header-wood">
-        <h1>☕ COFFEE TYCOON </h1>
-        <button class="btn-reset-data" onclick="resetGameData()">Reset</button>
-    </div>
-    
-    <!-- BOX RICHIESTA CLIENTE -->
-    <div class="customer-request-box">
-        <div>
-            <div style="font-size: 0.75em; font-weight: bold; color: #f57f17; text-transform: uppercase;">Ordinazione:</div>
-            <div class="request-bubble" id="lbl-request-text">In attesa...</div>
+    <!-- 1. CRUSCOTTO DETTAGLIATO E INVENTARIO FISSO IN ALTO (NOVITÀ) -->
+    <div class="top-dashboard">
+        <div class="mini-card money-card" id="card-money">
+            <i class="fa-solid fa-wallet"></i>
+            <span class="dash-label">Cassa</span>
+            <span class="dash-value" id="lbl-money">15.00€</span>
         </div>
-        <div>
-            <div style="font-size: 0.75em; font-weight: bold; text-align: center; margin-bottom: 5px;">Pazienza</div>
-            <div class="progress-container">
-                <div class="progress-bar" id="request-timer-bar"></div>
+        <div class="mini-card">
+            <i class="fa-solid fa-box" style="color:#795548;"></i>
+            <span class="dash-label">Capsule</span>
+            <span class="dash-value" id="lbl-capsules">10</span>
+        </div>
+        <div class="mini-card">
+            <i class="fa-solid fa-bottle-water" style="color:#26a69a;"></i>
+            <span class="dash-label">Latte</span>
+            <span class="dash-value" id="lbl-milk">5</span>
+        </div>
+        <div class="mini-card College-card inv-card">
+            <i class="fa-solid fa-mug-hot"></i>
+            <span class="dash-label">Caffè Pr.</span>
+            <span class="dash-value" id="showcase-espresso">0</span>
+        </div>
+        <div class="mini-card inv-card">
+            <i class="fa-solid fa-glass-water"></i>
+            <span class="dash-label">Cappu. Pr.</span>
+            <span class="dash-value" id="showcase-cappuccino">0</span>
+        </div>
+    </div>
+
+    <!-- 2. CONTENITORE CENTRALE DELLE SCHEDE INTERCAMBIABILI -->
+    <div class="main-content">
+        
+        <!-- SCHEDA 1: IL BANCO / BANCONE DEI CLIENTI -->
+        <div id="tab-shop" class="tab-panel active">
+            <h2><i class="fa-solid fa-shop"></i> Ordini & Negozio</h2>
+            
+            <div class="customer-request-box">
+                <div class="request-bubble" id="lbl-request-text">In attesa di clienti...</div>
+                <div class="progress-container">
+                    <div class="progress-bar" id="request-timer-bar"></div>
+                </div>
+                <button id="btn-serve-request" class="wood-btn" onclick="serveCustomerFromInventory(event)">
+                    <i class="fa-solid fa-hand-holding-dollar"></i> Consegna Ordine (+20%)
+                </button>
             </div>
-        </div>
-        <button id="btn-serve-request" class="wood-btn" onclick="serveCustomerFromInventory(event)">
-            Consegna! (+20%)
-        </button>
-    </div>
 
-    <!-- VETRINA INVENTARIO -->
-    <div class="showcase-container">
-        <div class="showcase-slot">
-            <div class="showcase-count" id="showcase-espresso">0</div>
-            <div class="showcase-label">☕ Caffè</div>
-        </div>
-        <div class="showcase-slot">
-            <div class="showcase-count" id="showcase-cappuccino">0</div>
-            <div class="showcase-label">🥛 Cappuccini</div>
-        </div>
-    </div>
-    
-    <!-- BANCO RISORSE -->
-    <div class="stats-bar">
-        <div class="stat-card" id="card-money">
-            <div class="stat-details"><span class="stat-label">Cassa</span><span class="stat-value"><span id="lbl-money">15.00</span> €</span></div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-details"><span class="stat-label">Capsule</span><span class="stat-value" id="lbl-capsules">10</span></div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-details"><span class="stat-label">Latte</span><span class="stat-value" id="lbl-milk">5</span></div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-details"><span class="stat-label">Macchina</span><span class="stat-value" id="lbl-machine-level-status">Liv. 1</span></div>
-        </div>
-    </div>
+            <div style="margin: 20px 0; border-bottom: 2px dashed #d7ccc8;"></div>
 
-    <!-- GRIGLIA PRINCIPALE -->
-    <div class="game-grid">
-        <div class="panel">
-            <h2>Produzione e Acquisti</h2>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+            <!-- MECCANICA DI MIGLIORAMENTO MACCHINA SPOSTATA QUI -->
+            <div class="card-item" style="background: #fff8e1; border-color: #ffe082; margin-top: 10px;">
+                <div class="item-info">
+                    <h3><i class="fa-solid fa-gauge-high" style="color:#b71c1c;"></i> Caldaia Calore</h3>
+                    <p id="lbl-machine-level-status">Livello 1 (+0% vel.)</p>
+                </div>
+                <button id="btn-upgrade-machine" class="wood-btn btn-action" style="background: linear-gradient(#4caf50, #2e7d32);" onclick="upgradeMachine()">Migliora (<span id="cost-machine-upgrade">10.00</span>€)</button>
+            </div>
+
+            <!-- BARISTA AUTOMATICO SPOSTATO QUI -->
+            <div class="card-item" style="margin-top: 10px;">
+                <div class="item-info">
+                    <h3><i class="fa-solid fa-user-tie"></i> Barista Aut.</h3>
+                    <p>Assunti: <span id="count-baristas" style="color:#e65100">0</span></p>
+                </div>
+                <button id="btn-hire-barista" class="wood-btn btn-action" onclick="hireBarista()">Assumi (<span id="cost-barista">15.00</span>€)</button>
+            </div>
+            
+            <button class="wood-btn" style="background: #c62828; margin-top: 25px; font-size: 0.8em;" onclick="resetGameData()">Reset Completo Gioco</button>
+        </div>
+
+        <!-- SCHEDA 2: LA PRODUZIONE / IL RICETTARIO (NOVITÀ PAGINA A SÈ) -->
+        <div id="tab-craft" class="tab-panel">
+            <h2><i class="fa-solid fa-gears"></i> Linee di Produzione</h2>
+            
+            <!-- MONITORAGGIO MACCHINARI IN COTTURA -->
+            <div class="delivery-queue-box" style="border-color: #4caf50; background-color: #fbfdfb;">
+                <div style="font-size: 0.75em; font-weight: bold; color:#1b5e20; margin-bottom: 5px;"><i class="fa-solid fa-fire-burner"></i> Monitoraggio Caldaie Macchina:</div>
+                <div id="craft-queue-container"></div>
+            </div>
+
+            <div style="font-weight: bold; margin-bottom: 10px; color: #5d4037; font-size: 0.9em;"><i class="fa-solid fa-list-check"></i> Avvia Cotture Manuali:</div>
+            <div id="recipes-list-container"></div>
+        </div>
+
+        <!-- SCHEDA 3: LA LOGISTICA / RIFORNIMENTI (NOVITÀ PAGINA A SÈ) -->
+        <div id="tab-logistics" class="tab-panel">
+            <h2><i class="fa-solid fa-truck"></i> Magazzino & Ordini</h2>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px;">
                 <button id="btn-buy-capsules" class="wood-btn" onclick="orderIngredients('capsules')">10 Caps (-5€)</button>
                 <button id="btn-buy-milk" class="wood-btn" onclick="orderIngredients('milk')">10 Latte (-4€)</button>
             </div>
 
-            <div class="delivery-queue-box" style="border-color: #4caf50; background-color: #fbfdfb;">
-                <div style="font-size: 0.75em; font-weight: bold; color:#1b5e20; margin-bottom: 4px;"><i class="fa-solid fa-mug-hot"></i> Macchinari in Cottura:</div>
-                <div id="craft-queue-container"></div>
-            </div>
-
+            <!-- MONITORAGGIO FURGONI MERCI -->
             <div class="delivery-queue-box">
-                <div style="font-size: 0.75em; font-weight: bold; color:#5d4037; margin-bottom: 4px;"><i class="fa-solid fa-truck"></i> Furgoni Merci:</div>
+                <div style="font-size: 0.75em; font-weight: bold; color:#5d4037; margin-bottom: 5px;"><i class="fa-solid fa-truck-moving"></i> Furgoni Merci in Viaggio:</div>
                 <div id="delivery-queue-container"></div>
             </div>
-            <div style="margin: 10px 0; border-bottom: 2px dashed #e0d4c3;"></div>
-            <div id="recipes-list-container"></div>
-        </div>
 
-        <div class="panel">
-            <h2>Officina & Personale</h2>
-            <!-- MACCHINA -->
-            <div class="card-item" style="background: #fff8e1; border-color: #ffe082;">
-                <div class="item-info">
-                    <h3><i class="fa-solid fa-gauge-high"></i> Caldaia</h3>
-                    <p>Livello: <span id="lbl-machine-level">1</span></p>
-                    <p style="font-size:0.7em; color:#8d6e63; margin:0;" id="lbl-machine-speed-desc">+0% velocità</p>
-                </div>
-                <button id="btn-upgrade-machine" class="wood-btn btn-action" style="background: linear-gradient(#4caf50, #2e7d32);" onclick="upgradeMachine()">Migliora (<span id="cost-machine-upgrade">10.00</span>€)</button>
-            </div>
-            <!-- BARISTA -->
-            <div class="card-item">
-                <div class="item-info">
-                    <h3><i class="fa-solid fa-user-tie"></i> Barista Aut.</h3>
-                    <p>Assunti: <span id="count-baristas">0</span></p>
-                </div>
-                <button id="btn-hire-barista" class="wood-btn btn-action" onclick="hireBarista()">Assumi (<span id="cost-barista">15.00</span>€)</button>
-            </div>
+            <div style="margin: 15px 0; border-bottom: 2px dashed #e0d4c3;"></div>
+            <div style="font-weight: bold; margin-bottom: 10px; color: #5d4037; font-size: 0.9em;"><i class="fa-solid fa-file-signature"></i> Contratti Fornitura Automatica:</div>
+
             <!-- FORNITORE CAPSULE -->
             <div class="card-item">
                 <div class="item-info">
-                    <h3><i class="fa-solid fa-truck-moving" style="color:#1565c0;"></i> Forn. Capsule</h3>
-                    <p>Contratti: <span id="count-suppliers-capsules">0</span></p>
+                    <h3><i class="fa-solid fa-truck-ramp-box" style="color:#1565c0;"></i> Forn. Capsule</h3>
+                    <p>Contratti: <span id="count-suppliers-capsules" style="color:#1565c0">0</span></p>
                 </div>
                 <button id="btn-hire-supplier-capsules" class="wood-btn btn-action" style="background: linear-gradient(#42a5f5, #1565c0);" onclick="hireSupplier('capsules')">Firma (<span id="cost-supplier-capsules">30.00</span>€)</button>
             </div>
+
             <!-- FORNITORE LATTE -->
             <div class="card-item">
                 <div class="item-info">
                     <h3><i class="fa-solid fa-cow" style="color:#00796b;"></i> Forn. Latte</h3>
-                    <p>Contratti: <span id="count-suppliers-milk">0</span></p>
+                    <p>Contratti: <span id="count-suppliers-milk" style="color:#00796b">0</span></p>
                 </div>
                 <button id="btn-hire-supplier-milk" class="wood-btn btn-action" style="background: linear-gradient(#26a69a, #00796b);" onclick="hireSupplier('milk')">Firma (<span id="cost-supplier-milk">30.00</span>€)</button>
             </div>
         </div>
+
     </div>
-</div>
+
+    <!-- 3. BARRA DI NAVIGAZIONE IN BASSO (BOTTOM NAVIGATION NAVBAR) (NOVITÀ) -->
+    <div class="bottom-nav">
+        <button class="nav-item active" id="nav-shop" onclick="switchTab('shop')">
+            <i class="fa-solid fa-shop"></i>
+            <span>Negozio</span>
+        </button>
+        <button class="nav-item" id="nav-craft" onclick="switchTab('craft')">
+            <i class="fa-solid fa-mug-hot"></i>
+            <span>Produzione</span>
+        </button>
+        <button class="nav-item" id="nav-logistics" onclick="switchTab('logistics')">
+            <i class="fa-solid fa-truck"></i>
+            <span>Logistica</span>
+        </button>
+    </div>
 
 <script>
-    // --- STRUTTURA REGISTRO DATI DI BASE ---
+    // --- CONFIGURAZIONE RICETTE ---
     const recipes = {
         espresso: { name: "Caffè Espresso", price: 2.00, capsules: 1, milk: 0, craftTime: 3.0, unlocked: true, licenseCost: 0 },
         cappuccino: { name: "Cappuccino Italiano", price: 4.50, capsules: 1, milk: 1, craftTime: 5.0, unlocked: false, licenseCost: 20.00 }
@@ -257,9 +305,20 @@
         incomingDeliveries: [], craftQueue: []
     };
 
-    // --- MECCANICHE DI SALVATAGGIO AUTOMATICO (LOCALSTORAGE) ---
+    // --- MECCANICA SWITCH TAB (NAVIGAZIONE A SCHEDE) (NOVITÀ) ---
+    function switchTab(tabId) {
+        // Disattiva tutti i pannelli e tutti i bottoni della navbar
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+
+        // Attiva solo la scheda cliccata
+        document.getElementById(`tab-${tabId}`).classList.remove('active'); // Sicurezza
+        document.getElementById(`tab-${tabId}`).classList.add('active');
+        document.getElementById(`nav-${tabId}`).classList.add('active');
+    }
+
+    // --- MECCANICHE DI SALVATAGGIO AUTOMATICO ---
     function saveGameData() {
-        // Salviamo lo stato attuale e le ricette sbloccate convertendoli in testo JSON
         localStorage.setItem('coffee_tycoon_state', JSON.stringify(state));
         localStorage.setItem('coffee_tycoon_recipes', JSON.stringify(recipes));
     }
@@ -270,33 +329,26 @@
 
         if (savedState && savedRecipes) {
             state = JSON.parse(savedState);
-            // Svuota le vecchie code temporanee all'avvio per evitare furgoni fantasma bloccati
             state.incomingDeliveries = [];
             state.craftQueue = [];
-            state.isCustomerWaiting = false; // Forza il reset del cliente
+            state.isCustomerWaiting = false;
 
             let parsedRecipes = JSON.parse(savedRecipes);
-            Object.keys(recipes).forEach(k => {
-                recipes[k].unlocked = parsedRecipes[k].unlocked;
-            });
+            Object.keys(recipes).forEach(k => { recipes[k].unlocked = parsedRecipes[k].unlocked; });
             
-            // Riattiva i thread dei baristi salvati
-            for(let i=0; i<state.baristas; i++) {
-                addBaristaAutomation(true);
-            }
+            for(let i=0; i<state.baristas; i++) { addBaristaAutomation(true); }
         }
     }
 
     function resetGameData() {
         if(confirm("Vuoi davvero azzerare l'impero e ricominciare da capo?")) {
-            localStorage.clear();
-            window.location.reload();
+            localStorage.clear(); window.location.reload();
         }
     }
 
-    // --- LOGICA DI GIOCO STANDARD ---
+    // --- CORE GAME ENGINE ---
     function createFloatingText(text, color, x, y) {
-        if (!x || !y) { const rect = document.getElementById('card-money').getBoundingClientRect(); x = rect.left + rect.width / 2; y = rect.top; }
+        if (!x || !y) { const rect = document.getElementById('card-money').getBoundingClientRect(); x = rect.left + rect.width / 2; y = rect.top + 40; }
         const el = document.createElement('div'); el.className = 'floating-text'; el.innerText = text; el.style.left = `${x}px`; el.style.top = `${y}px`; if (color) el.style.color = color;
         document.body.appendChild(el); setTimeout(() => el.remove(), 800);
     }
@@ -306,7 +358,7 @@
         state.currentRequestKey = unlocked[Math.floor(Math.random() * unlocked.length)];
         state.isCustomerWaiting = false; state.customerTimer = 10.0;
         let recipe = recipes[state.currentRequestKey];
-        document.getElementById('lbl-request-text').innerText = `Vorrei un ${recipe.name}!`;
+        document.getElementById('lbl-request-text').innerText = `Cliente: "Vorrei un ${recipe.name}!"`;
         document.getElementById('request-timer-bar').style.width = '100%';
         state.isCustomerWaiting = true;
         updateUI();
@@ -322,8 +374,7 @@
         if (state.capsules >= recipe.capsules && state.milk >= recipe.milk) {
             state.capsules -= recipe.capsules; state.milk -= recipe.milk;
             state.craftQueue.push({ id: Date.now() + Math.random(), key: selectedKey, name: recipe.name, progress: 0, totalTime: getModifiedCraftTime(recipe.craftTime) });
-            saveGameData(); // Salva
-            updateUI();
+            saveGameData(); updateUI();
         }
     }
 
@@ -332,21 +383,16 @@
         let requiredKey = state.currentRequestKey;
         if (state.inventory[requiredKey] > 0) {
             state.inventory[requiredKey] -= 1;
-            let cashGained = recipes[requiredKey].price * 1.20;
-            state.money += cashGained;
+            let cashGained = recipes[requiredKey].price * 1.20; state.money += cashGained;
             createFloatingText(`+${cashGained.toFixed(2)}€!`, '#2e7d32', event.clientX, event.clientY);
-            state.isCustomerWaiting = false;
-            generateCustomerRequest();
-            saveGameData(); // Salva
+            state.isCustomerWaiting = false; generateCustomerRequest(); saveGameData();
         }
     }
 
     function upgradeMachine() {
         if (state.money >= state.machineUpgradeCost) {
             state.money -= state.machineUpgradeCost; state.machineLevel += 1; state.machineUpgradeCost *= 1.8;
-            createFloatingText(`Potenziata!`, '#4caf50');
-            saveGameData();
-            updateUI();
+            createFloatingText(`Caldaia Migliorata!`, '#4caf50'); saveGameData(); updateUI();
         }
     }
 
@@ -361,8 +407,7 @@
 
     function addBaristaAutomation(isInitLoad = false) {
         if(!isInitLoad && state.money >= state.baristaCost) {
-            state.money -= state.baristaCost; state.baristas += 1; state.baristaCost *= 1.5;
-            saveGameData();
+            state.money -= state.baristaCost; state.baristas += 1; state.baristaCost *= 1.5; saveGameData();
         } else if (!isInitLoad) { return; }
 
         function baristaCycle() {
@@ -373,16 +418,13 @@
             setTimeout(() => {
                 if (state.capsules >= recipe.capsules && state.milk >= recipe.milk) {
                     state.capsules -= recipe.capsules; state.milk -= recipe.milk;
-                    state.inventory[chosenKey] += 1;
-                    createFloatingText(`+1 ${recipe.name}`, '#795548');
+                    state.inventory[chosenKey] += 1; createFloatingText(`+1 ${recipe.name}`, '#795548');
                 }
                 baristaCycle();
             }, workTime);
         }
-        baristaCycle();
-        updateUI();
+        baristaCycle(); updateUI();
     }
-    
     function hireBarista() { addBaristaAutomation(false); }
 
     function hireSupplier(type) {
@@ -391,8 +433,7 @@
         } else if (type === 'milk' && state.money >= state.supplierMilkCost) {
             state.money -= state.supplierMilkCost; state.suppliersMilk += 1; state.supplierMilkCost *= 1.6;
         }
-        saveGameData();
-        updateUI();
+        saveGameData(); updateUI();
     }
 
     function unlockRecipe(key) {
@@ -408,7 +449,7 @@
         Object.keys(recipes).forEach(key => {
             let r = recipes[key]; let card = document.createElement('div'); card.className = 'card-item';
             if(r.unlocked) {
-                card.innerHTML = `<div class="item-info"><h3>☕ ${r.name}</h3><p>${r.price.toFixed(2)}€ | Usa: ${r.capsules} Cap. ${r.milk > 0 ? `+ ${r.milk} L.` : ''}</p></div><button class="wood-btn btn-action" id="btn-craft-${key}" onclick="queueManualProduction('${key}')">Prepara</button>`;
+                card.innerHTML = `<div class="item-info"><h3>☕ ${r.name}</h3><p>${r.price.toFixed(2)}€ | Usa: ${r.capsules} C. / ${r.milk} L.</p></div><button class="wood-btn btn-action" id="btn-craft-${key}" onclick="queueManualProduction('${key}')">Prepara</button>`;
             } else {
                 card.innerHTML = `<div class="item-info" style="opacity:0.5;"><h3>🔒 ${r.name}</h3><p>Licenza: ${r.licenseCost.toFixed(2)}€</p></div><div class="unlock-wrapper"><span class="unlock-tooltip"><i class="fa-solid fa-circle-info"></i> REQUISITI:<br>• Paga ${r.licenseCost.toFixed(2)}€<br>• Assumi 1 Barista</span><button class="wood-btn btn-action" style="background:linear-gradient(#ff9800,#f57c00);" id="btn-unlock-${key}" onclick="unlockRecipe('${key}')">Sblocca</button></div>`;
             }
@@ -417,24 +458,29 @@
     }
 
     function updateUI() {
-        document.getElementById('lbl-money').innerText = state.money.toFixed(2);
+        // Aggiorna il cruscotto in alto
+        document.getElementById('lbl-money').innerText = state.money.toFixed(2) + "€";
         document.getElementById('lbl-capsules').innerText = state.capsules;
         document.getElementById('lbl-milk').innerText = state.milk;
+        document.getElementById('showcase-espresso').innerText = state.inventory.espresso;
+        document.getElementById('showcase-cappuccino').innerText = state.inventory.cappuccino;
+        
+        // Pannello Negozio/Staff
         document.getElementById('count-baristas').innerText = state.baristas;
         document.getElementById('cost-barista').innerText = state.baristaCost.toFixed(2);
+        let speedBonusPercent = (state.machineLevel - 1) * 10;
+        document.getElementById('lbl-machine-level').innerText = state.machineLevel;
+        document.getElementById('lbl-machine-speed-desc').innerText = `Velocità attuale manuale: +${speedBonusPercent}%`;
+        document.getElementById('cost-machine-upgrade').innerText = state.machineUpgradeCost.toFixed(2);
+        document.getElementById('lbl-machine-level-status').innerText = `Liv. ${state.machineLevel} (+${speedBonusPercent}% vel.)`;
+
+        // Pannello Logistica
         document.getElementById('count-suppliers-capsules').innerText = state.suppliersCapsules;
         document.getElementById('cost-supplier-capsules').innerText = state.supplierCapsulesCost.toFixed(2);
         document.getElementById('count-suppliers-milk').innerText = state.suppliersMilk;
         document.getElementById('cost-supplier-milk').innerText = state.supplierMilkCost.toFixed(2);
-        document.getElementById('showcase-espresso').innerText = state.inventory.espresso;
-        document.getElementById('showcase-cappuccino').innerText = state.inventory.cappuccino;
-        
-        let speedBonusPercent = (state.machineLevel - 1) * 10;
-        document.getElementById('lbl-machine-level').innerText = state.machineLevel;
-        document.getElementById('lbl-machine-speed-desc').innerText = `+${speedBonusPercent}% velocità`;
-        document.getElementById('cost-machine-upgrade').innerText = state.machineUpgradeCost.toFixed(2);
-        document.getElementById('lbl-machine-level-status').innerText = `Liv. ${state.machineLevel} (+${speedBonusPercent}%)`;
 
+        // Disabilitazione bottoni
         document.getElementById('btn-buy-capsules').disabled = state.money < 5.00;
         document.getElementById('btn-buy-milk').disabled = state.money < 4.00;
         document.getElementById('btn-hire-barista').disabled = state.money < state.baristaCost;
@@ -447,9 +493,9 @@
         let btnServe = document.getElementById('btn-serve-request');
         if (state.isCustomerWaiting) {
             if (isReadyInInventory) {
-                btnServe.disabled = false; btnServe.innerHTML = `Consegna! (+20%)`; btnServe.style.background = "linear-gradient(#4caf50, #2e7d32)"; btnServe.style.color="white";
+                btnServe.disabled = false; btnServe.innerHTML = `<i class="fa-solid fa-check"></i> Consegna Subito!`; btnServe.style.background = "linear-gradient(#4caf50, #2e7d32)"; btnServe.style.color="white";
             } else {
-                btnServe.disabled = true; btnServe.innerHTML = `Manca 1 ${recipes[requestedKey].name}`; btnServe.style.background = "#cfd8dc"; btnServe.style.color = "#78909c";
+                btnServe.disabled = true; btnServe.innerHTML = `<i class="fa-solid fa-clock"></i> Manca 1 ${recipes[requestedKey].name}`; btnServe.style.background = "#cfd8dc"; btnServe.style.color = "#78909c";
             }
         }
 
@@ -462,29 +508,31 @@
             }
         });
 
+        // Disegna linee produzione divise
         const craftContainer = document.getElementById('craft-queue-container');
         let espressoJobs = state.craftQueue.filter(j => j.key === 'espresso');
         let cappuccinoJobs = state.craftQueue.filter(j => j.key === 'cappuccino');
-        if (state.craftQueue.length === 0) { craftContainer.innerHTML = `<div style="color:#aaa; text-align:center;">Libera</div>`; } else {
+        if (state.craftQueue.length === 0) { craftContainer.innerHTML = `<div style="color:#aaa; text-align:center;">Nessun macchinario avviato</div>`; } else {
             craftContainer.innerHTML = '';
             if (espressoJobs.length > 0) {
                 let isAct = state.craftQueue[0].id === espressoJobs[0].id; let pct = isAct ? (espressoJobs[0].progress / espressoJobs[0].totalTime) * 100 : 0;
                 let div = document.createElement('div'); div.className = 'delivery-item';
-                div.innerHTML = `<span>☕ <b>Caffè</b> <b>x${espressoJobs.length}</b></span><div class="mini-progress"><div class="mini-progress-bar craft-progress-bar" style="width: ${pct}%"></div></div>`;
+                div.innerHTML = `<span>☕ <b>Caffè Espresso</b> <b>x${espressoJobs.length}</b></span><div class="mini-progress"><div class="mini-progress-bar craft-progress-bar" style="width: ${pct}%"></div></div>`;
                 craftContainer.appendChild(div);
             }
             if (cappuccinoJobs.length > 0) {
                 let isAct = state.craftQueue[0].id === cappuccinoJobs[0].id; let pct = isAct ? (cappuccinoJobs[0].progress / cappuccinoJobs[0].totalTime) * 100 : 0;
                 let div = document.createElement('div'); div.className = 'delivery-item';
-                div.innerHTML = `<span>🥛 <b>Cappuccino</b> <b>x${cappuccinoJobs.length}</b></span><div class="mini-progress"><div class="mini-progress-bar craft-progress-bar" style="width: ${pct}%"></div></div>`;
+                div.innerHTML = `<span>🥛 <b>Cappuccino It.</b> <b>x${cappuccinoJobs.length}</b></span><div class="mini-progress"><div class="mini-progress-bar craft-progress-bar" style="width: ${pct}%"></div></div>`;
                 craftContainer.appendChild(div);
             }
         }
 
+        // Disegna furgoni logistica
         const deliveryContainer = document.getElementById('delivery-queue-container');
         let capsDeliveries = state.incomingDeliveries.filter(d => d.type === 'capsules');
         let milkDeliveries = state.incomingDeliveries.filter(d => d.type === 'milk');
-        if (state.incomingDeliveries.length === 0) { deliveryContainer.innerHTML = `<div style="color:#aaa; text-align:center;">Vuoto</div>`; } else {
+        if (state.incomingDeliveries.length === 0) { deliveryContainer.innerHTML = `<div style="color:#aaa; text-align:center;">Nessun furgone in viaggio</div>`; } else {
             deliveryContainer.innerHTML = '';
             if (capsDeliveries.length > 0) {
                 let pct = (capsDeliveries[0].progress / capsDeliveries[0].totalTime) * 100;
@@ -501,18 +549,16 @@
         }
     }
 
-    // --- MAIN CORE INTERVAL LOOP ---
+    // --- INTERVAL MOTOR LOOP ---
     let loopCounter = 0;
     setInterval(function() {
         loopCounter++;
-        
-        // Ogni 5 secondi (50 tick) esegue un salvataggio automatico silenzioso preventivo
         if(loopCounter >= 50) { loopCounter = 0; saveGameData(); }
 
         if (state.craftQueue.length > 0) {
             let activeOrder = state.craftQueue[0]; activeOrder.progress += 0.1;
             if (activeOrder.progress >= activeOrder.totalTime) {
-                state.inventory[activeOrder.key] += 1; createFloatingText(`+1 Pronto`, '#4caf50');
+                state.inventory[activeOrder.key] += 1; createFloatingText(`+1 Pronto!`, '#4caf50');
                 state.craftQueue.shift(); saveGameData(); updateUI();
             } else { updateUI(); }
         }
@@ -539,7 +585,6 @@
             saveGameData(); updateUI();
         }
 
-        // Fornitori automatici (ogni 12 secondi)
         if(state.suppliersCapsules > 0 && loopCounter % 120 === 0) {
             let cost = state.suppliersCapsules * 4.20; if(state.money >= cost) { state.money -= cost; for(let s=0; s<state.suppliersCapsules; s++) state.incomingDeliveries.push({ id: Math.random(), type: 'capsules', totalTime: 4.0, progress: 0 }); }
         }
@@ -548,14 +593,10 @@
         }
     }, 100);
 
-    // --- REGISTRAZIONE SERVICE WORKER PER PWA CODA MOBILE ---
     if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register('sw.js').then(reg => console.log('PWA Pronto Offline!')).catch(err => console.log(err));
-        });
+        window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js'); });
     }
 
-    // CARICAMENTO INIZIALE
     loadGameData();
     generateCustomerRequest();
     renderRecipesMenu();
