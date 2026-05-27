@@ -111,7 +111,7 @@
         .nav-item i { font-size: 1.3em; margin-bottom: 3px; }
         .nav-item.active { color: #fff9c4; background: rgba(255,255,255,0.05); font-weight: 700; }
 
-        /* --- BOX ORDINAZIONE --- */
+        /* --- BOX ORDINATIONE --- */
         .customer-request-box {
             background: linear-gradient(135deg, #fffde7, #fff9c4);
             border: 3px solid #fbc02d; border-radius: 16px; padding: 12px; margin-bottom: 15px;
@@ -157,7 +157,7 @@
             cursor: not-allowed;
         }
 
-        /* --- RISOLTO: AGGIUNTE LE CLASSI MANCANTI PER LE BARRE E I BINARI DI ANIMAZIONE --- */
+        /* --- CLASSI CSS PER LE BARRE E I BINARI ANIMATI --- */
         .progress-container { width: 100%; background: #e0e0e0; height: 12px; border-radius: 6px; overflow: hidden; position: relative; }
         .progress-bar { width: 0%; height: 100%; background: #fbc02d; transition: width 0.1s linear; }
 
@@ -375,6 +375,7 @@
         if (btnElement.disabled) { triggerScreenShake(); }
     }
 
+    // --- STRUTTURA DI NAVIGAZIONE OTTIMIZZATA PER NON ROMPERE L'INIEZIONE DOM ---
     function switchTab(tabId) {
         document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
         document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
@@ -443,7 +444,6 @@
         updateUI();
     }
 
-    // Calcolo della velocità modificata
     function getModifiedCraftTime(baseTime) {
         let efficiencyMultiplier = 1 + ((state.machineLevel - 1) * 0.10);
         return Math.max(0.1, baseTime / efficiencyMultiplier);
@@ -537,7 +537,7 @@
         });
     }
 
-    // --- AGGIORNAMENTO UI CON LOGICA ISACT CORRETTA PER LINEA (RISOLTO!) ---
+    // --- AGGIORNAMENTO UI COMPLETO SENZA CRASH DA SCHEDA NASCOSTA ---
     function updateUI() {
         document.getElementById('lbl-money').innerText = state.money.toFixed(2) + "€";
         document.getElementById('lbl-capsules').innerText = state.capsules;
@@ -586,7 +586,7 @@
             }
         });
 
-        // 1. STAMPA CODA DI PRODUZIONE DIVISA (DESTRA -> SINISTRA)
+        // 1. RENDERING LOGICO BINARIO PRODUZIONE (Destra ➔ Sinistra)
         const craftContainer = document.getElementById('craft-queue-container');
         if (craftContainer) {
             let espressoJobs = state.craftQueue.filter(j => j.key === 'espresso');
@@ -596,8 +596,6 @@
                 craftContainer.innerHTML = `<div style="color:#aaa; text-align:center; font-size:0.85em; padding:10px;">Nessun macchinario avviato</div>`; 
             } else {
                 let htmlOutput = '';
-                
-                // RISOLVED: Logica isAct controlla la testa della coda reale globale
                 if (espressoJobs.length > 0) {
                     let isAct = state.craftQueue[0].id === espressoJobs[0].id; 
                     let pct = isAct ? (state.craftQueue[0].progress / state.craftQueue[0].totalTime) * 100 : 0;
@@ -626,7 +624,7 @@
             }
         }
 
-        // 2. STAMPA CODA DI SPEDIZIONE MERCI (SINISTRA -> DESTRA)
+        // 2. RENDERING LOGICO BINARIO LOGISTICA (Sinistra ➔ Destra)
         const deliveryContainer = document.getElementById('delivery-queue-container');
         if (deliveryContainer) {
             let capsDeliveries = state.incomingDeliveries.filter(d => d.type === 'capsules');
@@ -707,7 +705,7 @@
             saveGameData();
         }
 
-        // Forza costantemente il rinfresco grafico
+        // Aggiorna la grafica costantemente ad ogni singolo tick
         updateUI();
 
         // Fornitori contrattuali automatici
@@ -719,15 +717,16 @@
         }
     }, 100);
 
-    // Caricamento del Service Worker (Portato a v=5 per bypassare la cache)
+    // Caricamento del Service Worker forzato (v=6 per ripulire la vecchia cache buggata)
     if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js?v=5'); });
+        window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js?v=6'); });
     }
 
+    // DISPOSIZIONE E INIZIALIZZAZIONE COMPLETA RIGIDA (RISOLTO INIZIALIZZAZIONE COMPLETA DEL DOM)
     loadGameData();
     generateCustomerRequest();
-    renderRecipesMenu();
-    updateUI();
+    renderRecipesMenu(); // Forza il disegno dei listini prima di nascondere le schede
+    updateUI(); 
 </script>
 </body>
 </html>
