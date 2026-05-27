@@ -157,7 +157,10 @@
             cursor: not-allowed;
         }
 
-        /* --- BINARI DI ANIMAZIONE --- */
+        /* --- RISOLTO: AGGIUNTE LE CLASSI MANCANTI PER LE BARRE E I BINARI DI ANIMAZIONE --- */
+        .progress-container { width: 100%; background: #e0e0e0; height: 12px; border-radius: 6px; overflow: hidden; position: relative; }
+        .progress-bar { width: 0%; height: 100%; background: #fbc02d; transition: width 0.1s linear; }
+
         .delivery-queue-box { background: #fff; border: 2px dashed #8d6e63; border-radius: 12px; padding: 10px; margin-top: 10px; margin-bottom: 12px; }
         
         .animation-track-row {
@@ -202,7 +205,6 @@
 </head>
 <body id="body-container">
 
-    <!-- 1. CRUSCOTTO FISSO IN ALTO -->
     <div class="top-dashboard">
         <div class="mini-card money-card" id="card-money">
             <i class="fa-solid fa-wallet"></i>
@@ -231,10 +233,8 @@
         </div>
     </div>
 
-    <!-- 2. CONTENITORE CENTRALE SCHEDE -->
     <div class="main-content">
         
-        <!-- SCHEDA 1: IL BANCO -->
         <div id="tab-shop" class="tab-panel active">
             <h2><i class="fa-solid fa-shop"></i> Ordini al Banco</h2>
             
@@ -264,7 +264,8 @@
             <div class="card-item" style="background: #fff8e1; border-color: #ffe082; margin-top: 10px;">
                 <div class="item-info">
                     <h3><i class="fa-solid fa-gauge-high" style="color:#b71c1c;"></i> Caldaia Calore</h3>
-                    <p id="lbl-machine-level-status">Livello 1 (+0% vel.)</p>
+                    <p id="lbl-machine-level-status">Livello <span id="lbl-machine-level">1</span></p>
+                    <p style="font-size:0.75em; color:#8d6e63; margin:0;" id="lbl-machine-speed-desc">+0% velocità</p>
                 </div>
                 <button id="btn-upgrade-machine" class="wood-btn btn-action" style="background: linear-gradient(#4caf50, #2e7d32);" onclick="upgradeMachine()" onmousedown="checkDisabledClick(this)">Migliora (<span id="cost-machine-upgrade">10.00</span>€)</button>
             </div>
@@ -280,21 +281,18 @@
             <button class="wood-btn" style="background: #c62828; margin-top: 25px; font-size: 0.8em;" onclick="resetGameData()">Reset Completo Gioco</button>
         </div>
 
-        <!-- SCHEDA 2: LA PRODUZIONE (BINARI SOTTO AL MENU DI AVVIO) -->
         <div id="tab-craft" class="tab-panel">
             <h2><i class="fa-solid fa-gears"></i> Linee di Produzione</h2>
             
             <div style="font-weight: bold; margin-bottom: 10px; color: #5d4037; font-size: 0.9em;"><i class="fa-solid fa-list-check"></i> Sblocca Ricette e Avvia Cotture Manuali:</div>
             <div id="recipes-list-container"></div>
 
-            <!-- SPOSTATO QUI: Monitoraggio ora posizionato SUBITO SOTTO la selezione della produzione -->
             <div class="delivery-queue-box" style="border-color: #4caf50; background-color: #fbfdfb;">
                 <div style="font-size: 0.75em; font-weight: bold; color:#1b5e20; margin-bottom: 5px;"><i class="fa-solid fa-fire-burner"></i> Caldaie Macchine (Destra ➔ Sinistra):</div>
                 <div id="craft-queue-container"></div>
             </div>
         </div>
 
-        <!-- SCHEDA 3: LA LOGISTICA (BINARI SOTTO AI PULSANTI DI ORDINE) -->
         <div id="tab-logistics" class="tab-panel">
             <h2><i class="fa-solid fa-truck"></i> Magazzino & Ordini</h2>
             
@@ -304,7 +302,6 @@
                 <button id="btn-buy-milk" class="wood-btn" onclick="orderIngredients('milk')" onmousedown="checkDisabledClick(this)">10 Latte (-4€)</button>
             </div>
 
-            <!-- SPOSTATO QUI: Monitoraggio posizionato SUBITO SOTTO i tasti degli ordini merci -->
             <div class="delivery-queue-box">
                 <div style="font-size: 0.75em; font-weight: bold; color:#5d4037; margin-bottom: 5px;"><i class="fa-solid fa-truck-moving"></i> Furgoni Merci in Viaggio (Sinistra ➔ Destra):</div>
                 <div id="delivery-queue-container"></div>
@@ -332,7 +329,6 @@
 
     </div>
 
-    <!-- 3. BARRA DI NAVIGAZIONE IN BASSO -->
     <div class="bottom-nav">
         <button class="nav-item active" id="nav-shop" onclick="switchTab('shop')">
             <i class="fa-solid fa-shop"></i>
@@ -351,8 +347,8 @@
 <script>
     // --- CONFIGURAZIONE RICETTE ---
     const recipes = {
-        espresso: { name: "Caffè Espresso", price: 2.00, capsules: 1, milk: 0, craftTime: 3.0, unlocked: true, licenseCost: 0, icon: "fa-solid fa-mug-hot" },
-        cappuccino: { name: "Cappuccino Italiano", price: 4.50, capsules: 1, milk: 1, craftTime: 5.0, unlocked: false, licenseCost: 20.00, icon: "fa-solid fa-glass-water" }
+        espresso: { name: "Caffè Espresso", price: 2.00, capsules: 1, milk: 0, craftTime: 3.0, unlocked: true, licenseCost: 0, icon: "fa-solid fa-seedling" },
+        cappuccino: { name: "Cappuccino Italiano", price: 4.50, capsules: 1, milk: 1, craftTime: 5.0, unlocked: false, licenseCost: 20.00, icon: "fa-solid fa-mug-hot" }
     };
 
     let state = {
@@ -447,6 +443,7 @@
         updateUI();
     }
 
+    // Calcolo della velocità modificata
     function getModifiedCraftTime(baseTime) {
         let efficiencyMultiplier = 1 + ((state.machineLevel - 1) * 0.10);
         return Math.max(0.1, baseTime / efficiencyMultiplier);
@@ -510,7 +507,6 @@
     }
     function hireBarista() { addBaristaAutomation(false); }
 
-    // Fornitori contratti automatici
     function hireSupplier(type) {
         if (type === 'capsules' && state.money >= state.supplierCapsulesCost) {
             state.money -= state.supplierCapsulesCost; state.suppliersCapsules += 1; state.supplierCapsulesCost *= 1.6;
@@ -541,6 +537,7 @@
         });
     }
 
+    // --- AGGIORNAMENTO UI CON LOGICA ISACT CORRETTA PER LINEA (RISOLTO!) ---
     function updateUI() {
         document.getElementById('lbl-money').innerText = state.money.toFixed(2) + "€";
         document.getElementById('lbl-capsules').innerText = state.capsules;
@@ -550,6 +547,7 @@
         
         document.getElementById('count-baristas').innerText = state.baristas;
         document.getElementById('cost-barista').innerText = state.baristaCost.toFixed(2);
+        
         let speedBonusPercent = (state.machineLevel - 1) * 10;
         document.getElementById('lbl-machine-level').innerText = state.machineLevel;
         document.getElementById('lbl-machine-speed-desc').innerText = `Velocità manuale: +${speedBonusPercent}%`;
@@ -588,7 +586,7 @@
             }
         });
 
-        // DISEGNO CALDAIA SPOSTATO SOTTO IL LISTINO RICETTE
+        // 1. STAMPA CODA DI PRODUZIONE DIVISA (DESTRA -> SINISTRA)
         const craftContainer = document.getElementById('craft-queue-container');
         if (craftContainer) {
             let espressoJobs = state.craftQueue.filter(j => j.key === 'espresso');
@@ -598,6 +596,8 @@
                 craftContainer.innerHTML = `<div style="color:#aaa; text-align:center; font-size:0.85em; padding:10px;">Nessun macchinario avviato</div>`; 
             } else {
                 let htmlOutput = '';
+                
+                // RISOLVED: Logica isAct controlla la testa della coda reale globale
                 if (espressoJobs.length > 0) {
                     let isAct = state.craftQueue[0].id === espressoJobs[0].id; 
                     let pct = isAct ? (state.craftQueue[0].progress / state.craftQueue[0].totalTime) * 100 : 0;
@@ -626,7 +626,7 @@
             }
         }
 
-        // DISEGNO LOGISTICA SPOSTATO SOTTO I TASTI DI ACQUISTO
+        // 2. STAMPA CODA DI SPEDIZIONE MERCI (SINISTRA -> DESTRA)
         const deliveryContainer = document.getElementById('delivery-queue-container');
         if (deliveryContainer) {
             let capsDeliveries = state.incomingDeliveries.filter(d => d.type === 'capsules');
@@ -707,7 +707,7 @@
             saveGameData();
         }
 
-        // Aggiorna la grafica
+        // Forza costantemente il rinfresco grafico
         updateUI();
 
         // Fornitori contrattuali automatici
@@ -719,9 +719,9 @@
         }
     }, 100);
 
-    // Incremento versione cache per forzare il refresh
+    // Caricamento del Service Worker (Portato a v=5 per bypassare la cache)
     if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js?v=4'); });
+        window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js?v=5'); });
     }
 
     loadGameData();
