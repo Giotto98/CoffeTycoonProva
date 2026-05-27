@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Coffee Tycoon PRO - Fixed Layout</title>
+    <title>Coffee Tycoon PRO</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#2b1a11">
@@ -111,7 +111,7 @@
         .nav-item i { font-size: 1.3em; margin-bottom: 3px; }
         .nav-item.active { color: #fff9c4; background: rgba(255,255,255,0.05); font-weight: 700; }
 
-        /* --- BOX ORDINATIONE --- */
+        /* --- BOX ORDINAZIONE --- */
         .customer-request-box {
             background: linear-gradient(135deg, #fffde7, #fff9c4);
             border: 3px solid #fbc02d; border-radius: 16px; padding: 12px; margin-bottom: 15px;
@@ -148,6 +148,7 @@
         }
         .wood-btn:active:not(:disabled) { transform: translateY(2px); border-bottom-width: 2px; }
         
+        /* I PULSANTI DISABILITATI DIVENTANO GRIGI COMPLETI */
         .wood-btn:disabled { 
             background: linear-gradient(to bottom, #b0bec5, #90a4ae) !important; 
             border-color: #78909c !important; 
@@ -157,7 +158,7 @@
             cursor: not-allowed;
         }
 
-        /* --- CLASSI CSS PER LE BARRE E I BINARI ANIMATI --- */
+        /* --- STILI PER I BINARI DI ANIMAZIONE --- */
         .progress-container { width: 100%; background: #e0e0e0; height: 12px; border-radius: 6px; overflow: hidden; position: relative; }
         .progress-bar { width: 0%; height: 100%; background: #fbc02d; transition: width 0.1s linear; }
 
@@ -365,6 +366,7 @@
 
     function triggerScreenShake() {
         const bodyContainer = document.getElementById('body-container');
+        if (!bodyContainer) return;
         bodyContainer.classList.remove('shake-effect'); 
         void bodyContainer.offsetWidth; 
         bodyContainer.classList.add('shake-effect');
@@ -372,10 +374,9 @@
     }
 
     function checkDisabledClick(btnElement) {
-        if (btnElement.disabled) { triggerScreenShake(); }
+        if (btnElement && btnElement.disabled) { triggerScreenShake(); }
     }
 
-    // --- STRUTTURA DI NAVIGAZIONE OTTIMIZZATA PER NON ROMPERE L'INIEZIONE DOM ---
     function switchTab(tabId) {
         document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
         document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
@@ -482,6 +483,8 @@
             state.money -= cost;
             state.incomingDeliveries.push({ id: Date.now() + Math.random(), type: type, name: type === 'capsules' ? "Capsule" : "Latte", progress: 0, totalTime: 4.0 });
             updateUI();
+        } else {
+            triggerScreenShake();
         }
     }
 
@@ -525,7 +528,8 @@
     }
 
     function renderRecipesMenu() {
-        const container = document.getElementById('recipes-list-container'); container.innerHTML = '';
+        const container = document.getElementById('recipes-list-container'); if (!container) return;
+        container.innerHTML = '';
         Object.keys(recipes).forEach(key => {
             let r = recipes[key]; let card = document.createElement('div'); card.className = 'card-item';
             if(r.unlocked) {
@@ -537,39 +541,58 @@
         });
     }
 
-    // --- AGGIORNAMENTO UI COMPLETO SENZA CRASH DA SCHEDA NASCOSTA ---
     function updateUI() {
+        // Cruscotto alto
         document.getElementById('lbl-money').innerText = state.money.toFixed(2) + "€";
         document.getElementById('lbl-capsules').innerText = state.capsules;
         document.getElementById('lbl-milk').innerText = state.milk;
         document.getElementById('showcase-espresso').innerText = state.inventory.espresso;
         document.getElementById('showcase-cappuccino').innerText = state.inventory.cappuccino;
         
-        document.getElementById('count-baristas').innerText = state.baristas;
-        document.getElementById('cost-barista').innerText = state.baristaCost.toFixed(2);
+        // Sezione Negozio
+        let countBaristasEl = document.getElementById('count-baristas');
+        if (countBaristasEl) countBaristasEl.innerText = state.baristas;
+        let costBaristaEl = document.getElementById('cost-barista');
+        if (costBaristaEl) costBaristaEl.innerText = state.baristaCost.toFixed(2);
         
         let speedBonusPercent = (state.machineLevel - 1) * 10;
-        document.getElementById('lbl-machine-level').innerText = state.machineLevel;
-        document.getElementById('lbl-machine-speed-desc').innerText = `Velocità manuale: +${speedBonusPercent}%`;
-        document.getElementById('cost-machine-upgrade').innerText = state.machineUpgradeCost.toFixed(2);
-        document.getElementById('lbl-machine-level-status').innerText = `Liv. ${state.machineLevel} (+${speedBonusPercent}% vel.)`;
+        let lblMachineLevel = document.getElementById('lbl-machine-level');
+        if (lblMachineLevel) lblMachineLevel.innerText = state.machineLevel;
+        let lblMachineSpeed = document.getElementById('lbl-machine-speed-desc');
+        if (lblMachineSpeed) lblMachineSpeed.innerText = `Velocità manuale: +${speedBonusPercent}%`;
+        let costUpgradeEl = document.getElementById('cost-machine-upgrade');
+        if (costUpgradeEl) costUpgradeEl.innerText = state.machineUpgradeCost.toFixed(2);
+        let lblMachineStatus = document.getElementById('lbl-machine-level-status');
+        if (lblMachineStatus) lblMachineStatus.innerText = `Liv. ${state.machineLevel} (+${speedBonusPercent}% vel.)`;
 
-        document.getElementById('count-suppliers-capsules').innerText = state.suppliersCapsules;
-        document.getElementById('cost-supplier-capsules').innerText = state.supplierCapsulesCost.toFixed(2);
-        document.getElementById('count-suppliers-milk').innerText = state.suppliersMilk;
-        document.getElementById('cost-supplier-milk').innerText = state.supplierMilkCost.toFixed(2);
+        // Sezione Logistica
+        let countSuppCaps = document.getElementById('count-suppliers-capsules');
+        if (countSuppCaps) countSuppCaps.innerText = state.suppliersCapsules;
+        let costSuppCaps = document.getElementById('cost-supplier-capsules');
+        if (costSuppCaps) costSuppCaps.innerText = state.supplierCapsulesCost.toFixed(2);
+        let countSuppMilk = document.getElementById('count-suppliers-milk');
+        if (countSuppMilk) countSuppMilk.innerText = state.suppliersMilk;
+        let costSuppMilk = document.getElementById('cost-supplier-milk');
+        if (costSuppMilk) costSuppMilk.innerText = state.supplierMilkCost.toFixed(2);
 
-        document.getElementById('btn-buy-capsules').disabled = state.money < 5.00;
-        document.getElementById('btn-buy-milk').disabled = state.money < 4.00;
-        document.getElementById('btn-hire-barista').disabled = state.money < state.baristaCost;
-        document.getElementById('btn-upgrade-machine').disabled = state.money < state.machineUpgradeCost;
-        document.getElementById('btn-hire-supplier-capsules').disabled = state.money < state.supplierCapsulesCost;
-        document.getElementById('btn-hire-supplier-milk').disabled = state.money < state.supplierMilkCost;
+        // Disabilitazione pulsanti generali
+        let btnBuyCaps = document.getElementById('btn-buy-capsules');
+        if (btnBuyCaps) btnBuyCaps.disabled = state.money < 5.00;
+        let btnBuyMilk = document.getElementById('btn-buy-milk');
+        if (btnBuyMilk) btnBuyMilk.disabled = state.money < 4.00;
+        let btnHireBarista = document.getElementById('btn-hire-barista');
+        if (btnHireBarista) btnHireBarista.disabled = state.money < state.baristaCost;
+        let btnUpgradeMachine = document.getElementById('btn-upgrade-machine');
+        if (btnUpgradeMachine) btnUpgradeMachine.disabled = state.money < state.machineUpgradeCost;
+        let btnHireSuppCaps = document.getElementById('btn-hire-supplier-capsules');
+        if (btnHireSuppCaps) btnHireSuppCaps.disabled = state.money < state.supplierCapsulesCost;
+        let btnHireSuppMilk = document.getElementById('btn-hire-supplier-milk');
+        if (btnHireSuppMilk) btnHireSuppMilk.disabled = state.money < state.supplierMilkCost;
 
         let requestedKey = state.currentRequestKey;
         let isReadyInInventory = state.inventory[requestedKey] > 0;
         let btnServe = document.getElementById('btn-serve-request');
-        if (state.isCustomerWaiting) {
+        if (btnServe && state.isCustomerWaiting) {
             if (isReadyInInventory) {
                 btnServe.disabled = false; btnServe.innerHTML = `<i class="fa-solid fa-check"></i> Consegna Subito!`; btnServe.style.background = "linear-gradient(#4caf50, #2e7d32)"; btnServe.style.color="white"; btnServe.style.borderColor = "#1b5e20";
             } else {
@@ -579,14 +602,11 @@
 
         Object.keys(recipes).forEach(key => {
             let r = recipes[key];
-            if(r.unlocked) {
-                let b = document.getElementById(`btn-craft-${key}`); if(b) b.disabled = state.capsules < r.capsules || state.milk < r.milk;
-            } else {
-                let b = document.getElementById(`btn-unlock-${key}`); if(b) b.disabled = state.money < r.licenseCost || state.baristas < 1;
-            }
+            let b = document.getElementById(`btn-craft-${key}`); if(b && r.unlocked) b.disabled = state.capsules < r.capsules || state.milk < r.milk;
+            let bu = document.getElementById(`btn-unlock-${key}`); if(bu && !r.unlocked) bu.disabled = state.money < r.licenseCost || state.baristas < 1;
         });
 
-        // 1. RENDERING LOGICO BINARIO PRODUZIONE (Destra ➔ Sinistra)
+        // 1. ANIMAZIONE BINARIO CALDAIA (RISOLTA LOGICA DI TRACCIAMENTO)
         const craftContainer = document.getElementById('craft-queue-container');
         if (craftContainer) {
             let espressoJobs = state.craftQueue.filter(j => j.key === 'espresso');
@@ -624,7 +644,7 @@
             }
         }
 
-        // 2. RENDERING LOGICO BINARIO LOGISTICA (Sinistra ➔ Destra)
+        // 2. ANIMAZIONE BINARIO FURGONI LOGISTICA
         const deliveryContainer = document.getElementById('delivery-queue-container');
         if (deliveryContainer) {
             let capsDeliveries = state.incomingDeliveries.filter(d => d.type === 'capsules');
@@ -661,13 +681,12 @@
         }
     }
 
-    // --- TIMERS ENGINE (100ms) ---
+    // --- TIMERS ENGINE ---
     let loopCounter = 0;
     setInterval(function() {
         loopCounter++;
         if(loopCounter >= 50) { loopCounter = 0; saveGameData(); }
 
-        // Avanzamento Macchina espresso
         if (state.craftQueue.length > 0) {
             let activeOrder = state.craftQueue[0]; activeOrder.progress += 0.1;
             if (activeOrder.progress >= activeOrder.totalTime) {
@@ -676,7 +695,6 @@
             }
         }
 
-        // Avanzamento Cliente al banco
         if (state.isCustomerWaiting) {
             state.customerTimer -= 0.1;
             let barEl = document.getElementById('request-timer-bar');
@@ -691,7 +709,6 @@
             }
         }
 
-        // Avanzamento furgoni logistica
         if (state.incomingDeliveries.length > 0) {
             let rem = []; state.incomingDeliveries.forEach((del, idx) => {
                 del.progress += 0.1;
@@ -705,10 +722,8 @@
             saveGameData();
         }
 
-        // Aggiorna la grafica costantemente ad ogni singolo tick
         updateUI();
 
-        // Fornitori contrattuali automatici
         if(state.suppliersCapsules > 0 && loopCounter % 120 === 0) {
             let cost = state.suppliersCapsules * 4.20; if(state.money >= cost) { state.money -= cost; for(let s=0; s<state.suppliersCapsules; s++) state.incomingDeliveries.push({ id: Math.random(), type: 'capsules', totalTime: 4.0, progress: 0 }); }
         }
@@ -717,16 +732,14 @@
         }
     }, 100);
 
-    // Caricamento del Service Worker forzato (v=6 per ripulire la vecchia cache buggata)
     if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js?v=6'); });
+        window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js?v=7'); });
     }
 
-    // DISPOSIZIONE E INIZIALIZZAZIONE COMPLETA RIGIDA (RISOLTO INIZIALIZZAZIONE COMPLETA DEL DOM)
     loadGameData();
     generateCustomerRequest();
-    renderRecipesMenu(); // Forza il disegno dei listini prima di nascondere le schede
-    updateUI(); 
+    renderRecipesMenu();
+    updateUI();
 </script>
 </body>
 </html>
