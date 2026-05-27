@@ -18,7 +18,6 @@
     <style>
         * { box-sizing: border-box; user-select: none; -webkit-user-select: none; touch-action: manipulation; }
         
-        /* Layout fisso bloccato all'altezza dello schermo dello smartphone */
         html, body { 
             margin: 0; padding: 0; width: 100%; height: 100%; 
             overflow: hidden; font-family: 'Quicksand', sans-serif;
@@ -31,7 +30,7 @@
             display: flex; flex-direction: column;
         }
 
-        /* --- CRUSCOTTO DELLE RISORSE IN ALTO (FISSO) --- */
+        /* --- CRUSCOTTO DELLE RISORSE IN ALTO --- */
         .top-dashboard {
             background: linear-gradient(to bottom, #4e342e, #2b1a11);
             border-bottom: 3px solid #5d4037;
@@ -64,21 +63,21 @@
         .dash-label { font-size: 0.6em; text-transform: uppercase; font-weight: 700; color: #5d4037; }
         .dash-value { font-family: 'Fredoka', sans-serif; font-size: 0.85em; font-weight: 700; color: #1a0f0a; word-break: break-all; }
 
-        /* --- CONTENITORE DELLE SCHEDE (CENTRALE) --- */
+        /* --- CONTENITORE DELLE SCHEDE --- */
         .main-content {
             flex: 1;
             padding: 12px;
-            overflow-y: auto; /* Permette lo scroll solo dentro la scheda attiva se serve */
-            padding-bottom: 80px; /* Spazio per non coprire i tasti sotto */
+            position: relative;
+            padding-bottom: 80px; 
         }
 
         .tab-panel {
             background: #fcf8f2;
-            border: 3px solid #5d4037;
+            border: 4px solid #5d4037;
             border-radius: 20px;
             padding: 15px;
             box-shadow: 0 6px 15px rgba(0,0,0,0.3);
-            display: none; /* Nascoste di base, attivate via JS */
+            display: none; 
             height: 100%;
             overflow-y: auto;
         }
@@ -87,7 +86,7 @@
 
         h2 { font-family: 'Fredoka', sans-serif; color: #4e342e; text-align: center; margin-top: 0; border-bottom: 2px dashed #d7ccc8; padding-bottom: 5px; font-size: 1.2em; text-transform: uppercase;}
 
-        /* --- MENU DI NAVIGAZIONE IN BASSO (BOTTOM NAVBAR) --- */
+        /* --- MENU DI NAVIGAZIONE IN BASSO --- */
         .bottom-nav {
             position: fixed; bottom: 0; left: 0; right: 0;
             height: 65px; background: linear-gradient(to top, #2b1a11, #4e342e);
@@ -100,13 +99,12 @@
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             color: #d7ccc8; border: none; background: none; cursor: pointer;
             font-family: 'Fredoka', sans-serif; font-size: 0.8em; font-weight: 600;
-            transition: all 0.2s;
         }
 
         .nav-item i { font-size: 1.3em; margin-bottom: 3px; }
         .nav-item.active { color: #fff9c4; background: rgba(255,255,255,0.05); font-weight: 700; }
 
-        /* --- ELEMENTI INTERFACCIA RIUTILIZZATI --- */
+        /* --- ELEMENTI INTERFACCIA --- */
         .customer-request-box {
             background: linear-gradient(135deg, #fffde7, #fff9c4);
             border: 3px solid #fbc02d; border-radius: 16px; padding: 12px; margin-bottom: 15px;
@@ -149,7 +147,7 @@
 </head>
 <body>
 
-    <!-- 1. CRUSCOTTO DETTAGLIATO E INVENTARIO FISSO IN ALTO (NOVITÀ) -->
+    <!-- 1. CRUSCOTTO FISSO IN ALTO -->
     <div class="top-dashboard">
         <div class="mini-card money-card" id="card-money">
             <i class="fa-solid fa-wallet"></i>
@@ -166,7 +164,7 @@
             <span class="dash-label">Latte</span>
             <span class="dash-value" id="lbl-milk">5</span>
         </div>
-        <div class="mini-card College-card inv-card">
+        <div class="mini-card inv-card">
             <i class="fa-solid fa-mug-hot"></i>
             <span class="dash-label">Caffè Pr.</span>
             <span class="dash-value" id="showcase-espresso">0</span>
@@ -178,10 +176,10 @@
         </div>
     </div>
 
-    <!-- 2. CONTENITORE CENTRALE DELLE SCHEDE INTERCAMBIABILI -->
+    <!-- 2. CONTENITORE CENTRALE SCHEDE -->
     <div class="main-content">
         
-        <!-- SCHEDA 1: IL BANCO / BANCONE DEI CLIENTI -->
+        <!-- SCHEDA 1: IL BANCO -->
         <div id="tab-shop" class="tab-panel active">
             <h2><i class="fa-solid fa-shop"></i> Ordini & Negozio</h2>
             
@@ -197,16 +195,14 @@
 
             <div style="margin: 20px 0; border-bottom: 2px dashed #d7ccc8;"></div>
 
-            <!-- MECCANICA DI MIGLIORAMENTO MACCHINA SPOSTATA QUI -->
             <div class="card-item" style="background: #fff8e1; border-color: #ffe082; margin-top: 10px;">
                 <div class="item-info">
                     <h3><i class="fa-solid fa-gauge-high" style="color:#b71c1c;"></i> Caldaia Calore</h3>
                     <p id="lbl-machine-level-status">Livello 1 (+0% vel.)</p>
                 </div>
-                <button id="btn-upgrade-machine" class="wood-btn btn-action" style="background: linear-gradient(#4caf50, #2e7d32);" onclick="upgradeMachine()">Migliora (<span id="cost-machine-upgrade">10.00</span>€)</button>
+                <button id="btn-upgrade-machine" class="wood-btn btn-action" style="background: linear-gradient(#4caf50, #2e7d32); border-color:#1b5e20;" onclick="upgradeMachine()">Migliora (<span id="cost-machine-upgrade">10.00</span>€)</button>
             </div>
 
-            <!-- BARISTA AUTOMATICO SPOSTATO QUI -->
             <div class="card-item" style="margin-top: 10px;">
                 <div class="item-info">
                     <h3><i class="fa-solid fa-user-tie"></i> Barista Aut.</h3>
@@ -218,11 +214,10 @@
             <button class="wood-btn" style="background: #c62828; margin-top: 25px; font-size: 0.8em;" onclick="resetGameData()">Reset Completo Gioco</button>
         </div>
 
-        <!-- SCHEDA 2: LA PRODUZIONE / IL RICETTARIO (NOVITÀ PAGINA A SÈ) -->
+        <!-- SCHEDA 2: LA PRODUZIONE -->
         <div id="tab-craft" class="tab-panel">
             <h2><i class="fa-solid fa-gears"></i> Linee di Produzione</h2>
             
-            <!-- MONITORAGGIO MACCHINARI IN COTTURA -->
             <div class="delivery-queue-box" style="border-color: #4caf50; background-color: #fbfdfb;">
                 <div style="font-size: 0.75em; font-weight: bold; color:#1b5e20; margin-bottom: 5px;"><i class="fa-solid fa-fire-burner"></i> Monitoraggio Caldaie Macchina:</div>
                 <div id="craft-queue-container"></div>
@@ -232,7 +227,7 @@
             <div id="recipes-list-container"></div>
         </div>
 
-        <!-- SCHEDA 3: LA LOGISTICA / RIFORNIMENTI (NOVITÀ PAGINA A SÈ) -->
+        <!-- SCHEDA 3: LA LOGISTICA -->
         <div id="tab-logistics" class="tab-panel">
             <h2><i class="fa-solid fa-truck"></i> Magazzino & Ordini</h2>
             
@@ -241,7 +236,6 @@
                 <button id="btn-buy-milk" class="wood-btn" onclick="orderIngredients('milk')">10 Latte (-4€)</button>
             </div>
 
-            <!-- MONITORAGGIO FURGONI MERCI -->
             <div class="delivery-queue-box">
                 <div style="font-size: 0.75em; font-weight: bold; color:#5d4037; margin-bottom: 5px;"><i class="fa-solid fa-truck-moving"></i> Furgoni Merci in Viaggio:</div>
                 <div id="delivery-queue-container"></div>
@@ -250,28 +244,26 @@
             <div style="margin: 15px 0; border-bottom: 2px dashed #e0d4c3;"></div>
             <div style="font-weight: bold; margin-bottom: 10px; color: #5d4037; font-size: 0.9em;"><i class="fa-solid fa-file-signature"></i> Contratti Fornitura Automatica:</div>
 
-            <!-- FORNITORE CAPSULE -->
             <div class="card-item">
                 <div class="item-info">
                     <h3><i class="fa-solid fa-truck-ramp-box" style="color:#1565c0;"></i> Forn. Capsule</h3>
                     <p>Contratti: <span id="count-suppliers-capsules" style="color:#1565c0">0</span></p>
                 </div>
-                <button id="btn-hire-supplier-capsules" class="wood-btn btn-action" style="background: linear-gradient(#42a5f5, #1565c0);" onclick="hireSupplier('capsules')">Firma (<span id="cost-supplier-capsules">30.00</span>€)</button>
+                <button id="btn-hire-supplier-capsules" class="wood-btn btn-action" style="background: linear-gradient(#42a5f5, #1565c0); border-color:#0d47a1;" onclick="hireSupplier('capsules')">Firma (<span id="cost-supplier-capsules">30.00</span>€)</button>
             </div>
 
-            <!-- FORNITORE LATTE -->
             <div class="card-item">
                 <div class="item-info">
                     <h3><i class="fa-solid fa-cow" style="color:#00796b;"></i> Forn. Latte</h3>
                     <p>Contratti: <span id="count-suppliers-milk" style="color:#00796b">0</span></p>
                 </div>
-                <button id="btn-hire-supplier-milk" class="wood-btn btn-action" style="background: linear-gradient(#26a69a, #00796b);" onclick="hireSupplier('milk')">Firma (<span id="cost-supplier-milk">30.00</span>€)</button>
+                <button id="btn-hire-supplier-milk" class="wood-btn btn-action" style="background: linear-gradient(#26a69a, #00796b); border-color:#004d40;" onclick="hireSupplier('milk')">Firma (<span id="cost-supplier-milk">30.00</span>€)</button>
             </div>
         </div>
 
     </div>
 
-    <!-- 3. BARRA DI NAVIGAZIONE IN BASSO (BOTTOM NAVIGATION NAVBAR) (NOVITÀ) -->
+    <!-- 3. BARRA DI NAVIGAZIONE IN BASSO -->
     <div class="bottom-nav">
         <button class="nav-item active" id="nav-shop" onclick="switchTab('shop')">
             <i class="fa-solid fa-shop"></i>
@@ -305,19 +297,21 @@
         incomingDeliveries: [], craftQueue: []
     };
 
-    // --- MECCANICA SWITCH TAB (NAVIGAZIONE A SCHEDE) (NOVITÀ) ---
+    // --- MECCANICA SWITCH TAB RISOLTA ---
     function switchTab(tabId) {
-        // Disattiva tutti i pannelli e tutti i bottoni della navbar
         document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
         document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
 
-        // Attiva solo la scheda cliccata
-        document.getElementById(`tab-${tabId}`).classList.remove('active'); // Sicurezza
         document.getElementById(`tab-${tabId}`).classList.add('active');
         document.getElementById(`nav-${tabId}`).classList.add('active');
+        
+        // RISOLUZIONE BUG: Forza il ridisegno delle ricette quando apri la scheda produzione
+        if(tabId === 'craft') {
+            renderRecipesMenu();
+        }
     }
 
-    // --- MECCANICHE DI SALVATAGGIO AUTOMATICO ---
+    // --- MECCANICHE DI SALVATAGGIO ---
     function saveGameData() {
         localStorage.setItem('coffee_tycoon_state', JSON.stringify(state));
         localStorage.setItem('coffee_tycoon_recipes', JSON.stringify(recipes));
@@ -458,29 +452,25 @@
     }
 
     function updateUI() {
-        // Aggiorna il cruscotto in alto
         document.getElementById('lbl-money').innerText = state.money.toFixed(2) + "€";
         document.getElementById('lbl-capsules').innerText = state.capsules;
         document.getElementById('lbl-milk').innerText = state.milk;
         document.getElementById('showcase-espresso').innerText = state.inventory.espresso;
         document.getElementById('showcase-cappuccino').innerText = state.inventory.cappuccino;
         
-        // Pannello Negozio/Staff
         document.getElementById('count-baristas').innerText = state.baristas;
         document.getElementById('cost-barista').innerText = state.baristaCost.toFixed(2);
         let speedBonusPercent = (state.machineLevel - 1) * 10;
         document.getElementById('lbl-machine-level').innerText = state.machineLevel;
-        document.getElementById('lbl-machine-speed-desc').innerText = `Velocità attuale manuale: +${speedBonusPercent}%`;
+        document.getElementById('lbl-machine-speed-desc').innerText = `Velocità manuale: +${speedBonusPercent}%`;
         document.getElementById('cost-machine-upgrade').innerText = state.machineUpgradeCost.toFixed(2);
         document.getElementById('lbl-machine-level-status').innerText = `Liv. ${state.machineLevel} (+${speedBonusPercent}% vel.)`;
 
-        // Pannello Logistica
         document.getElementById('count-suppliers-capsules').innerText = state.suppliersCapsules;
         document.getElementById('cost-supplier-capsules').innerText = state.supplierCapsulesCost.toFixed(2);
         document.getElementById('count-suppliers-milk').innerText = state.suppliersMilk;
         document.getElementById('cost-supplier-milk').innerText = state.supplierMilkCost.toFixed(2);
 
-        // Disabilitazione bottoni
         document.getElementById('btn-buy-capsules').disabled = state.money < 5.00;
         document.getElementById('btn-buy-milk').disabled = state.money < 4.00;
         document.getElementById('btn-hire-barista').disabled = state.money < state.baristaCost;
@@ -508,7 +498,6 @@
             }
         });
 
-        // Disegna linee produzione divise
         const craftContainer = document.getElementById('craft-queue-container');
         let espressoJobs = state.craftQueue.filter(j => j.key === 'espresso');
         let cappuccinoJobs = state.craftQueue.filter(j => j.key === 'cappuccino');
@@ -528,7 +517,6 @@
             }
         }
 
-        // Disegna furgoni logistica
         const deliveryContainer = document.getElementById('delivery-queue-container');
         let capsDeliveries = state.incomingDeliveries.filter(d => d.type === 'capsules');
         let milkDeliveries = state.incomingDeliveries.filter(d => d.type === 'milk');
@@ -549,7 +537,7 @@
         }
     }
 
-    // --- INTERVAL MOTOR LOOP ---
+    // --- LOGICA TIMER CENTRALE ---
     let loopCounter = 0;
     setInterval(function() {
         loopCounter++;
